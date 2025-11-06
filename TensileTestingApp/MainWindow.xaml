@@ -5,8 +5,34 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TensileTestingApp"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Tensile Testing" Height="950" Width="1280" Icon="/TensileTestingIcon.png" WindowStartupLocation="CenterScreen">
+    
+    <Grid VerticalAlignment="Top" HorizontalAlignment="Left" ShowGridLines="True" Height="900" Width="1280">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel x:Name="ComPortPanel" Grid.Row="0" Grid.Column="0" VerticalAlignment="Top">
+            <Label x:Name="ComPortLabel" Content="Select your com port, input address, baurd rate and total Channel to open Com port" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5, 5, 5, 5"/>
+            <ComboBox x:Name="ComPortComboBox" Width="150" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5, 5, 5, 5"/>
+            <Label x:Name="AddressLabel" Content="Address: (0-255)" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5, 5, 5, 5"/>
+            <!-- TODO: Do validation for address input (only allow numbers between 0-255) -->
+                <TextBox x:Name="AddressTextBox" Width="150" Height="25" VerticalAlignment="Top" HorizontalAlignment="Left" Margin="5, 5, 5, 5" Text="2"/>
+        </StackPanel>
+
+        <StatusBar x:Name="StatusBar" Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Left" Height="25" Width="640">
+            <StatusBarItem>
+                <TextBlock x:Name="StatusBarText" Text="COM port status: Disconnected" />
+            </StatusBarItem>
+        </StatusBar>
 
     </Grid>
+
+   
+
 </Window>

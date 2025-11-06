@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO.Ports;
 
 namespace TensileTestingApp
 {
@@ -19,6 +20,16 @@ namespace TensileTestingApp
         public MainWindow()
         {
             InitializeComponent();
+            LoadComPort();
+        }
+        private void LoadComPort()
+        {
+            string[] ports = SerialPort.GetPortNames();
+            foreach (string port in ports)
+            {
+                ComPortComboBox.Items.Add(port);
+            }
+            ComPortComboBox.SelectedIndex = ports.Length - 1;
         }
     }
 }
