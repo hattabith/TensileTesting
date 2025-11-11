@@ -18,6 +18,16 @@
 
   <ItemGroup>
     <PackageReference Include="System.IO.Ports" Version="9.0.10" />
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="MccDaq">
+      <HintPath>MccDaq.dll</HintPath>
+    </Reference>
+    <Reference Include="PACNET">
+      <HintPath>PACNET.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
