@@ -21,8 +21,9 @@ Beyond visualization, Tensile Testing incorporates advanced calculation modules 
 - Maximum load and breaking point (kN)
 - Elongation at failure (mm)
 - Stress $(\sigma\)$ and strain $\(\varepsilon\)$ based on user-supplied sample dimensions:
-$$\sigma = \frac{F}{A}$$
-$$\varepsilon = \frac{L - L_0}{L_0}$$
+> $$\sigma = \frac{F}{A}$$
+>
+> $$\varepsilon = \frac{L - L_0}{L_0}$$
 - Young’s modulus (E) from the initial slope of the graph
 - Yield points (upper/lower) using standard recognition algorithms
 - Energy (area under the curve), ductility, and other key material indicators
