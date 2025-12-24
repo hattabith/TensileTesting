@@ -15,8 +15,7 @@
         Icon="/Icon.png" 
         WindowStartupLocation="CenterScreen"
         WindowState="Normal">
-<!-- TODO: Make static window size (non-resizible) -->
-    <!-- Size is 1024x768 -->
+
 
     <Window.DataContext>
         <vm:MainWindowViewModel/>
