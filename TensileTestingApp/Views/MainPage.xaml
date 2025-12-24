@@ -11,9 +11,9 @@
     <Page.DataContext>
         <ViewModel:MainWindowViewModel/>
     </Page.DataContext>
-    <Grid ShowGridLines="True">
+    <Grid ShowGridLines="False">
         <Grid.RowDefinitions>
-            <RowDefinition />
+            <RowDefinition Height="Auto"/>
             <RowDefinition />
             <RowDefinition />
         </Grid.RowDefinitions>
@@ -26,7 +26,7 @@
 
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <Label Content="COM port" Margin="10 10 0 10" />
-            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100"/>
+            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100" />
             <Label Content="Baud Rate" Margin="0 10 0 10" />
             <ComboBox Name="BaudRateComboBox" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0">
                 <ComboBoxItem Content="9600" />
@@ -36,6 +36,22 @@
             <ComboBox Name="Address485ComboBox" ItemsSource="{Binding Path=RS485Address}" SelectedIndex="2" Margin="0 10 10 10" Height="22" Width="100"  />
             <Button Name="ConnectButton" Content="Connect" Margin="10 10 0 10" Width="100" Height="22"/> 
         </StackPanel>
+
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
+            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Label Content="Specimen name" Margin="10 10 0 10" ></Label>
+                <TextBox Text="" Margin="0 10 0 10" Width="100" Height="22"></TextBox>
+                <Label Content="Type" Margin="10 10 0 10" />
+                <ComboBox Name="SpecimenTypeComboBox" ItemsSource="{Binding Path=SpecimenTypeValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Label Content="Diameter" Margin="10 10 0 10" />
+                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22"></TextBox>
+                <Label Content="Height" Margin="10 10 0 10" />
+                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22"></TextBox>
+            </StackPanel>
+        </StackPanel>
+
 
 
         <oxy:PlotView Model="{Binding ForcePlot}" Grid.Column="0" Grid.Row="2"/>

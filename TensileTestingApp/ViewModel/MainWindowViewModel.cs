@@ -6,7 +6,7 @@ using System.Windows.Controls;
 
 namespace TensileTestingApp.ViewModel
 {
-    public class MainWindowViewModel : INotifyPropertyChanged
+    public partial class MainWindowViewModel : INotifyPropertyChanged
     {
         private Frame _mainWindowFrame;
 
@@ -38,6 +38,7 @@ namespace TensileTestingApp.ViewModel
             this.ForceLengthPlot.Series.Add(new FunctionSeries(Math.Exp, 0, 10, 0.1, "exp(x)"));
             this.PortList = SerialPort.GetPortNames().ToList<string>();
             this.RS485Address = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
+
         }
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -47,6 +48,13 @@ namespace TensileTestingApp.ViewModel
         public PlotModel ForceLengthPlot { get; private set; }
         public List<string> PortList { get; set; }
         public List<int> RS485Address { get; set; }
+        public Array SpecimenTypeValues => Enum.GetValues(typeof(SpecimentType));
+
+        public void UpdatePortList()
+        {
+            this.PortList = SerialPort.GetPortNames().ToList<string>();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PortList)));
+        }
 
 
     }
