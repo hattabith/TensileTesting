@@ -32,6 +32,7 @@ namespace TensileTestingApp.ViewModel
         {
             this.ForcePlot = new PlotModel { Title = "Force Data" };
             this.ForcePlot.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
+            // TODO: Make RED lines 
             this.LengthPlot = new PlotModel { Title = "Length Data" };
             this.LengthPlot.Series.Add(new FunctionSeries(Math.Tan, 0, 10, 0.1, "tan(x)"));
             this.ForceLengthPlot = new PlotModel { Title = "Force/Length Data" };
@@ -48,7 +49,7 @@ namespace TensileTestingApp.ViewModel
         public PlotModel ForceLengthPlot { get; private set; }
         public List<string> PortList { get; set; }
         public List<int> RS485Address { get; set; }
-        public Array SpecimenTypeValues => Enum.GetValues(typeof(SpecimentType));
+        public static Array SpecimenTypeValues => Enum.GetValues(typeof(SpecimentType));
 
         public void UpdatePortList()
         {
