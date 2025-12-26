@@ -30,9 +30,19 @@ namespace TensileTestingApp.ViewModel
 
         public MainWindowViewModel()
         {
-            this.ForcePlot = new PlotModel { Title = "Force Data" };
+            this.ForcePlot = new PlotModel
+            {
+                Title = "Force Data"
+            };
+            var series1 = new LineSeries
+            {
+                Title = "Line Force",
+                Color = OxyColors.Red
+            };
+            series1.Points.Add(new DataPoint(0, 1));
+            series1.Points.Add(new DataPoint(10, 5));
+            this.ForcePlot.Series.Add(series1);
             this.ForcePlot.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
-            // TODO: Make RED lines 
             this.LengthPlot = new PlotModel { Title = "Length Data" };
             this.LengthPlot.Series.Add(new FunctionSeries(Math.Tan, 0, 10, 0.1, "tan(x)"));
             this.ForceLengthPlot = new PlotModel { Title = "Force/Length Data" };
