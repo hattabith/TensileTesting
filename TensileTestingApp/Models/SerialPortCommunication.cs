@@ -30,6 +30,10 @@ namespace TensileTestingApp.Models
         {
             return _deviceAddress;
         }
+        public List<string> GetAvailablePorts()
+        {
+            return SerialPort.GetPortNames().ToList<string>();
+        }
         public bool IsOpen
         {
             get => port.IsOpen;
@@ -89,5 +93,7 @@ namespace TensileTestingApp.Models
                 throw new Exception("Serial port timeout error" + ex.Message);
             }
         }
+
+        // TODO: BaudRates 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
     }
 }
