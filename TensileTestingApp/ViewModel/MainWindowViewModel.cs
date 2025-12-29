@@ -60,6 +60,7 @@ namespace TensileTestingApp.ViewModel
         public List<string> PortList { get; set; }
         public List<int> RS485Address { get; set; }
         public static Array SpecimenTypeValues => Enum.GetValues(typeof(SpecimentType));
+        public static List<string> BaudRatesValues => Models.SerialPortCommunications.BaudRates();
 
         public void UpdatePortList()
         {

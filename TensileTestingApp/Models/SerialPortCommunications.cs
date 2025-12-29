@@ -2,13 +2,13 @@
 
 namespace TensileTestingApp.Models
 {
-    public class SerialPortCommunication
+    public class SerialPortCommunications
     {
         private SerialPort port;
         private string _portName;
         private int _baudRate;
         private int _deviceAddress;
-        public SerialPortCommunication(string PortName, int BaudRate, int DeviceAddress)
+        public SerialPortCommunications(string PortName, int BaudRate, int DeviceAddress)
         {
             _portName = PortName;
             _baudRate = BaudRate;
@@ -66,7 +66,7 @@ namespace TensileTestingApp.Models
                 }
             }
         }
-        public void WriteToPort(string command)
+        public void WriteToPort(string command, int timeout)
         {
             if (!port.IsOpen)
             {
@@ -74,6 +74,7 @@ namespace TensileTestingApp.Models
             }
             try
             {
+                port.WriteTimeout = timeout;
                 port.WriteLine(command);
             }
             catch (Exception ex)
@@ -93,7 +94,9 @@ namespace TensileTestingApp.Models
                 throw new Exception("Serial port timeout error" + ex.Message);
             }
         }
-
-        // TODO: BaudRates 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200
+        public static List<string> BaudRates()
+        {
+            return new List<string> { "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200" };
+        }
     }
 }
