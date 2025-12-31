@@ -63,6 +63,8 @@ namespace TensileTestingApp.ViewModel
         public static List<string> BaudRatesValues => Models.SerialPortCommunications.BaudRates();
 
         // TODO: Implement DCON command list and functionality
+        // TODO: Add command format to documentation
+        // TODO: Thinking aabout XML documentation and use DocFX to generate documentation
 
         /* Command format
          *  -----------------------------------------------------------
@@ -96,6 +98,14 @@ namespace TensileTestingApp.ViewModel
          * ---- N - Current connection mode (0 = Differential, 1 = Single-ended)
          * -- Example:  !010
          * ~** - Informs all modules that the host is OK
+         * 
+         * 
+         * # - ChannelsReadDelimiter
+         * $ - SystemQueryDelimiter
+         * @ - ConfigStatusDelimiter
+         * ~ - BroadCastDelimiter
+         * 
+         * 
          */
 
         public void UpdatePortList()
