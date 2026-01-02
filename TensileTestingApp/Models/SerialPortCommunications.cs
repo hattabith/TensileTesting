@@ -82,12 +82,39 @@ namespace TensileTestingApp.Models
                 throw new Exception("Error during communication: " + ex.Message);
             }
         }
+        public void WriteToPort(string command)
+        {
+            if (!port.IsOpen)
+            {
+                throw new Exception("Serial port is not open.");
+            }
+            try
+            {
+                port.WriteLine(command);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error during communication: " + ex.Message);
+            }
+
+        }
         public string ReadFromPort(int timeout)
         {
             try
             {
                 port.ReadTimeout = timeout;
-                return port.ReadLine();
+                return port.ReadLine().ToString();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Serial port timeout error" + ex.Message);
+            }
+        }
+        public string ReadFromPort()
+        {
+            try
+            {
+                return port.ReadLine().ToString();
             }
             catch (Exception ex)
             {
