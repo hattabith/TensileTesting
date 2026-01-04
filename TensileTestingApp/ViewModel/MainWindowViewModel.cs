@@ -71,6 +71,8 @@ namespace TensileTestingApp.ViewModel
          * | Leading Character | Module Address | Data | [CHKSUM] | CR |
          * ------------------------------------------------------------
          * 
+         * IMPORTANT: All characters should be in upper case. All commands must end with a Carriage Return (CR) character (ASCII 13)
+         * 
          * Most important commands:
          * #AA - Read the analog input for all channels
          * -- Valid response: >(Data)[CHKSUM](CR)
