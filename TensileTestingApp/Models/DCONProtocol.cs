@@ -4,7 +4,7 @@
     {
         public DCONProtocol()
         {
-
+            // TODO: Implement DCON protocol specifics here
         }
     }
 }
