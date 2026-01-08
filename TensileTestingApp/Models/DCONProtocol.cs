@@ -5,6 +5,7 @@
         public DCONProtocol()
         {
             // TODO: Implement DCON protocol specifics here
+            // Just do it
         }
     }
 }
