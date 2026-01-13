@@ -26,9 +26,9 @@
 
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <Label Content="COM port" Margin="10 10 0 10" />
-            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100" />
+            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="2" />
             <Label Content="Baud Rate" Margin="0 10 0 10" />
-            <ComboBox Name="BaudRateComboBox" ItemsSource="{Binding Path=BaudRatesValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0">
+            <ComboBox Name="BaudRateComboBox" ItemsSource="{Binding Path=BaudRatesValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="3">
             </ComboBox>
             <Label Content="RS-485 Address" Margin="0 10 0 10" />
             <ComboBox Name="Address485ComboBox" ItemsSource="{Binding Path=RS485Address}" SelectedIndex="2" Margin="0 10 10 10" Height="22" Width="100"  />
