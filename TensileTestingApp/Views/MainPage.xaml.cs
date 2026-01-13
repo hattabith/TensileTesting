@@ -23,6 +23,7 @@ namespace TensileTestingApp.Views
 
                 //sp = new SerialPortCommunications(COMPortComboBox.SelectedItem.ToString(), (Int32)BaudRateComboBox.SelectedItem, Address485ComboBox.SelectedIndex);
                 sp.OpenConnection();
+                // Чому не міняє значення одразу?
                 ConnectButton.Content = "Disconnect";
                 COMPortComboBox.IsEnabled = false;
                 BaudRateComboBox.IsEnabled = false;
@@ -33,7 +34,7 @@ namespace TensileTestingApp.Views
                 ConnectButton.IsEnabled = true;
                 OutputTextBlock.Text += "Sending: #02\n";
                 sp.WriteToPort("#02\n", 300);
-                OutputTextBlock.Text += "Response is: " + sp.ReadFromPort().ToString();
+                OutputTextBlock.Text += "Response is: " + sp.ReadFromPort();
             }
             else
             {
