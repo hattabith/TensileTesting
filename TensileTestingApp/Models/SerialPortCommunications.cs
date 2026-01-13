@@ -121,9 +121,9 @@ namespace TensileTestingApp.Models
                 throw new Exception("Serial port timeout error" + ex.Message);
             }
         }
-        public static List<string> BaudRates()
+        public static List<int> BaudRates()
         {
-            return new List<string> { "1200", "2400", "4800", "9600", "19200", "38400", "57600", "115200" };
+            return new List<int> { 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
         }
     }
 }
