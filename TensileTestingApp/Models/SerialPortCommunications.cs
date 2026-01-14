@@ -114,7 +114,7 @@ namespace TensileTestingApp.Models
         {
             try
             {
-                return port.ReadLine().ToString();
+                return port.ReadLine();  // Check if ToString() is necessary
             }
             catch (Exception ex)
             {
