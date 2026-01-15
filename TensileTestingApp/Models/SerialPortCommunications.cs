@@ -115,6 +115,7 @@ namespace TensileTestingApp.Models
             try
             {
                 return port.ReadLine();  // Check if ToString() is necessary
+                // TODO: Implement async read with event handler for better performance
             }
             catch (Exception ex)
             {
