@@ -17,6 +17,11 @@ namespace TensileTestingApp.Views
         private void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             sp = new SerialPortCommunications(COMPortComboBox.SelectedItem.ToString(), (Int32)BaudRateComboBox.SelectedItem, Address485ComboBox.SelectedIndex);
+            Thread readThread = new Thread(sp.OpenConnection);
+            readThread.Start();
+
+            // треба зробити поток для ініціалізації з'єднання, після того як ініціалізація успішно відбулася,
+            // тоді робимо поток читання і виводу в текстове поле
             if (!sp.IsOpen)
             {
                 // TODO: Need refactoring
