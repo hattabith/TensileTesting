@@ -1,5 +1,6 @@
 ﻿using System.Windows.Controls;
 using TensileTestingApp.Models;
+using static TensileTestingApp.ViewModel.MainWindowViewModel;
 
 namespace TensileTestingApp.Views
 {
@@ -8,7 +9,8 @@ namespace TensileTestingApp.Views
     /// </summary>
     public partial class MainPage : Page
     {
-        SerialPortCommunications sp;
+        private SerialPortCommunications? _sp;
+        private ConnectionState _connectionState = ConnectionState.Disconnected;
         public MainPage()
         {
             InitializeComponent();
