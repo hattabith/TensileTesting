@@ -17,6 +17,7 @@ namespace TensileTestingApp.Models
             port = new SerialPort();
             port.PortName = PortName;
             port.BaudRate = BaudRate;
+            port.NewLine = "\r"; // Important: DCON protocol for M-7017r uses carriage return as line ending
         }
         public string GetPortName()
         {
