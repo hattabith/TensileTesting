@@ -11,6 +11,7 @@ namespace TensileTestingApp.Views
     {
         private SerialPortCommunications? _sp;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
+
         public MainPage()
         {
             InitializeComponent();
@@ -48,12 +49,14 @@ namespace TensileTestingApp.Views
             _connectionState = ConnectionState.Connecting;
             UpdateUiState();
 
+
             _sp = new SerialPortCommunications(
                 COMPortComboBox.SelectedItem.ToString(),
                 (int)BaudRateComboBox.SelectedItem,
                 Address485ComboBox.SelectedIndex);
 
             await Task.Run(() => _sp.OpenConnection());
+
 
             _connectionState = ConnectionState.Initializing;
             UpdateUiState();

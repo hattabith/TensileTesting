@@ -5,8 +5,11 @@
         public enum SpecimentType
         {
             Cylindrical,
-            FlatShort,
-            FlatLong
+            NarrowFlat,
+            WideFlat,
+            DumbbellShaped,
+            Compressinon,
+            Bending
         }
 
 
