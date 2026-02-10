@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Runtime.Intrinsics.Arm;
+using System.Windows.Controls;
 using TensileTestingApp.Models;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
 
@@ -11,6 +12,9 @@ namespace TensileTestingApp.Views
     {
         private SerialPortCommunications? _sp;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
+        private CancellationTokenSource? _pollCts;
+        private Task? _pollTask;
+        private DCONProtocol? _dCon;
 
         public MainPage()
         {
@@ -29,10 +33,12 @@ namespace TensileTestingApp.Views
                 if (_connectionState == ConnectionState.Disconnected)
                 {
                     await ConnectAsync();
+                    StartPolling();
                 }
                 else if (_connectionState == ConnectionState.Connected)
                 {
                     await DisconnectAsync();
+                    await StopPolling();
                 }
             }
             catch (Exception ex)
@@ -57,7 +63,7 @@ namespace TensileTestingApp.Views
             await Task.Run(() => _sp.OpenConnection());
 
 
-            _connectionState = ConnectionState.Initializing;
+            _connectionState = ConnectionState.Connected;
             UpdateUiState();
 
         }
@@ -72,6 +78,67 @@ namespace TensileTestingApp.Views
             _connectionState = ConnectionState.Disconnected;
             UpdateUiState();
         }
+        private void StartPolling()
+        {
+            if (_pollTask != null && !_pollTask.IsCompleted)
+                return;
+
+            _dCon = new DCONProtocol(_sp.GetDeviceAddress());
+            _pollCts = new CancellationTokenSource();
+            _pollTask = Task.Run(() => PollLoop(_pollCts.Token));
+        }
+        private async Task PollLoop(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    if (_sp != null && _dCon != null && _connectionState == ConnectionState.Connected)
+                    {
+                        string command = _dCon.GetReadCommand();
+
+                        // оновити UI:
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            OutputTextBlock.Text += "-> " + command + '\n';
+                        });
+
+                        _sp.WriteToPort(command, 1000);
+                        var data = _sp.ReadFromPort(300);
+
+                        // оновити UI:
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            OutputTextBlock.Text += "<- " + data + '\n';
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // лог
+                }
+
+                await Task.Delay(500, token); // інтервал опитування
+            }
+        }
+        private async Task StopPolling()
+        {
+            if (_pollCts == null) return;
+
+            _pollCts.Cancel();
+
+            try
+            {
+                if (_pollTask != null)
+                    await _pollTask;
+            }
+            catch (OperationCanceledException) { }
+
+            _pollCts.Dispose();
+            _pollCts = null;
+            _pollTask = null;
+        }
+
         private void UpdateUiState()
         {
             switch (_connectionState)

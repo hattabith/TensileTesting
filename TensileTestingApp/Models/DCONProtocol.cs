@@ -2,8 +2,10 @@
 {
     public class DCONProtocol
     {
-        public DCONProtocol()
+        string _address;
+        public DCONProtocol(int address)
         {
+            _address = address.ToString("D2");
             // TODO: Implement DCON protocol here
 
 
@@ -55,6 +57,25 @@
              * 
              */
 
+        }
+
+        public string GetReadCommand()
+        {
+            string command = "#" + _address;
+            return command + CalcChecksum(command);
+        }
+
+        private string CalcChecksum(string command)
+        {
+            int sum = 0;
+
+            foreach (char c in command)
+            {
+                sum += (byte)c;
+            }
+            int checksum = sum & 0xFF;
+
+            return checksum.ToString("X2");
         }
     }
 }
