@@ -5,7 +5,7 @@
         string _address;
         public DCONProtocol(int address)
         {
-            _address = address.ToString("D2");
+            _address = address.ToString("D2");  // Add number of zero before integer to make it 2 digits, for example 1 becomes 01, 2 becomes 02, etc.
             // TODO: Implement DCON protocol here
 
 
@@ -75,7 +75,7 @@
             }
             int checksum = sum & 0xFF;
 
-            return checksum.ToString("X2");
+            return checksum.ToString("X2");  // Convert to hexadecimal string with 2 digits
         }
     }
 }

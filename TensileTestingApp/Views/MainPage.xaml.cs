@@ -1,4 +1,4 @@
-﻿using System.Runtime.Intrinsics.Arm;
+﻿using System.Collections.ObjectModel;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
@@ -15,6 +15,7 @@ namespace TensileTestingApp.Views
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
         private DCONProtocol? _dCon;
+        private ObservableCollection<TensileTestData> _testData;
 
         public MainPage()
         {
@@ -43,7 +44,8 @@ namespace TensileTestingApp.Views
             }
             catch (Exception ex)
             {
-                OutputTextBlock.Text += $"Error: {ex.Message}\n";
+                //OutputTextBlock.Text += $"Error: {ex.Message}\n";
+                OutputTextBox.Text += $"Error: {ex.Message}\n";
                 _connectionState = ConnectionState.Error;
                 UpdateUiState();
             }
@@ -100,7 +102,8 @@ namespace TensileTestingApp.Views
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            OutputTextBlock.Text += "-> " + command + '\n';
+                            //OutputTextBlock.Text += "-> " + command + '\n';
+                            OutputTextBox.Text += command + '\n';
                         });
 
                         _sp.WriteToPort(command, 1000);
@@ -109,7 +112,8 @@ namespace TensileTestingApp.Views
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            OutputTextBlock.Text += "<- " + data + '\n';
+                            //OutputTextBlock.Text += "<- " + System.DateTime.Now + " " + data + '\n';
+                            OutputTextBox.Text += System.DateTime.Now + " " + data + '\n';
                         });
                     }
                 }

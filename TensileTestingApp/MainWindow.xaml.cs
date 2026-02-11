@@ -16,6 +16,7 @@ namespace TensileTestingApp
             vm.CurrentPage = new Views.MainPage();
             this.DataContext = vm;
 
+
         }
     }
 }
