@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="TensileTesting.Tests/TensileTesting.Tests.csproj" Id="4f620050-a2f6-4d64-9074-d788cef29357" />
   <Project Path="TensileTestingApp/TensileTestingApp.csproj" />
 </Solution>
