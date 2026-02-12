@@ -26,29 +26,35 @@
 
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
             <Label Content="COM port" Margin="10 10 0 10" />
-            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="2" />
+            <ComboBox Name="COMPortComboBox" ItemsSource="{Binding Path=PortList}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="2" 
+                      ToolTip="Select COM port widt ICP-CON device"/>
             <Label Content="Baud Rate" Margin="0 10 0 10" />
-            <ComboBox Name="BaudRateComboBox" ItemsSource="{Binding Path=BaudRatesValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="3">
+            <ComboBox Name="BaudRateComboBox" ItemsSource="{Binding Path=BaudRatesValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="3"
+                      ToolTip="Select BaudRate, by default it is 9600">
             </ComboBox>
             <Label Content="RS-485 Address" Margin="0 10 0 10" />
-            <ComboBox Name="Address485ComboBox" ItemsSource="{Binding Path=RS485Address}" SelectedIndex="2" Margin="0 10 10 10" Height="22" Width="100"  />
+            <ComboBox Name="Address485ComboBox" ItemsSource="{Binding Path=RS485Address}" SelectedIndex="2" Margin="0 10 10 10" Height="22" Width="100" 
+                      ToolTip="Address DCON device for RS-485"/>
             <Label Content="CheckSum" Margin="0 10 0 10" />
-            <CheckBox Name="CheckSumCheckBox" Margin="0 16 0 10" IsChecked="True"/>
-            <Button Name="ConnectButton" Content="Connect" Margin="10 10 0 10" Width="100" Height="22" Click="ConnectButton_Click"/> 
+            <CheckBox Name="CheckSumCheckBox" Margin="0 16 0 10" IsChecked="True" ToolTip="CheckSum Enable/Disable"/>
+            <Button Name="ConnectButton" Content="Connect" Margin="10 10 0 10" Width="100" Height="22" Click="ConnectButton_Click" 
+                    ToolTip="Connect to COM port and start Recive/transmit data"/> 
         </StackPanel>
 
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
             <StackPanel Orientation="Horizontal"  HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="Specimen name" Margin="10 10 0 10" ></Label>
-                <TextBox Text="" Margin="0 10 0 10" Width="100" Height="22"></TextBox>
+                <TextBox Text="" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter specimen name or experiment name"></TextBox>
                 <Label Content="Type" Margin="10 10 0 10" />
-                <ComboBox Name="SpecimenTypeComboBox" ItemsSource="{Binding Path=SpecimenTypeValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0"/>
+                <ComboBox Name="SpecimenTypeComboBox" ItemsSource="{Binding Path=SpecimenTypeValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0"
+                          ToolTip="Type of spiceman. Under construction. Today only &quot;Cylindrscal&quot; working... "/>
             </StackPanel>
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="Diameter" Margin="10 10 0 10" />
-                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22"></TextBox>
+                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen diameter in mm"></TextBox>
                 <Label Content="Height" Margin="10 10 0 10" />
-                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22"></TextBox>
+                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen height in mm"></TextBox>
             </StackPanel>
         </StackPanel>
 
@@ -56,8 +62,16 @@
             <Label Content="Input\Output: " FontWeight="Bold" Margin="10 10 0 10" />
             <ScrollViewer  VerticalScrollBarVisibility="Auto" Margin="10 0 0 10" Width="400" Height="200" VerticalAlignment="Bottom" VerticalContentAlignment="Top">
                <!-- <TextBlock Name="OutputTextBlock"  FontWeight="Bold" Margin="0 0 0 0" Width="380" Background="LightGray" TextWrapping="Wrap" MinWidth="400" MinHeight="200" VerticalAlignment="Bottom"/> -->
-                <TextBox Name="OutputTextBox" Margin="0 0 0 0" Width="380" BorderThickness="1" Background="LightGray" TextWrapping="Wrap" MinWidth="400" MinHeight="200" VerticalAlignment="Bottom"/>
+                <TextBox Name="OutputTextBox" Margin="0 0 0 0" Width="380" BorderThickness="1" Background="LightGray" TextWrapping="Wrap" MinWidth="400" 
+                         MinHeight="200" VerticalAlignment="Bottom" ToolTip="Transmit/Recive data from COM port"/>
             </ScrollViewer>
+        </StackPanel>
+
+        <StackPanel Orientation="Vertical" Grid.Row="1"  Grid.Column="1" >
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Label Content="File Name: " Margin="10 10 0 10"/>
+                <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" />
+            </StackPanel>
         </StackPanel>
 
 
