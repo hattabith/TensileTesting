@@ -25,7 +25,8 @@ namespace TensileTestingApp.Views
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
 
             // треба зробити поток для ініціалізації з'єднання, після того як ініціалізація успішно відбулася,
             // тоді робимо поток читання і виводу в текстове поле

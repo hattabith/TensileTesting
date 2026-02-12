@@ -32,6 +32,8 @@
             </ComboBox>
             <Label Content="RS-485 Address" Margin="0 10 0 10" />
             <ComboBox Name="Address485ComboBox" ItemsSource="{Binding Path=RS485Address}" SelectedIndex="2" Margin="0 10 10 10" Height="22" Width="100"  />
+            <Label Content="CheckSum" Margin="0 10 0 10" />
+            <CheckBox Name="CheckSumCheckBox" Margin="0 16 0 10" IsChecked="True"/>
             <Button Name="ConnectButton" Content="Connect" Margin="10 10 0 10" Width="100" Height="22" Click="ConnectButton_Click"/> 
         </StackPanel>
 
