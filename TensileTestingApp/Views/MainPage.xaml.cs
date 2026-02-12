@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
@@ -113,7 +114,7 @@ namespace TensileTestingApp.Views
                         await Dispatcher.InvokeAsync(() =>
                         {
                             //OutputTextBlock.Text += "<- " + System.DateTime.Now + " " + data + '\n';
-                            OutputTextBox.Text += System.DateTime.Now + " " + data + '\n';
+                            OutputTextBox.Text += DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
                         });
                     }
                 }

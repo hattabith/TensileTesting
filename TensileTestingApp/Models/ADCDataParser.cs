@@ -5,11 +5,12 @@ namespace TensileTestingApp.Models
 {
     public class ADCDataParser
     {
-        private const string _pattern = @"^(\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}) >([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})([+-]?\d{2}\.\d{3})(\d{2})$";
+        private const string _pattern =
+            "^(\\d{2}\\.\\d{2}\\.\\d{4} \\d{2}:\\d{2}:\\d{2}) >([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})(\\d{2})$";
         public TensileTestData ParseWithOutCheckSum(string data)
         {
 
-            var matches = Regex.Match(data, _pattern.Substring(0, 77));
+            var matches = Regex.Match(data, _pattern);
             if (matches.Success)
                 return new TensileTestData
                 {
