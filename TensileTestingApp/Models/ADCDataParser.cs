@@ -21,7 +21,12 @@ namespace TensileTestingApp.Models
                     Force = double.Parse(matches.Groups[2].Value.StartsWith("+") ? matches.Groups[2].Value[1..] : matches.Groups[2].Value, CultureInfo.InvariantCulture),
                     Length = double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
                 };
-            return null;
+            return new TensileTestData
+            {
+                Timestamp = DateTime.Now,
+                Force = 0d,
+                Length = 0d
+            };
         }
         public TensileTestData ParseWithCheckSum(string data)
         {
@@ -35,7 +40,12 @@ namespace TensileTestingApp.Models
                     Length = double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
                 };
             }
-            return null;
+            return new TensileTestData
+            {
+                Timestamp = DateTime.Now,
+                Force = 0d,
+                Length = 0d
+            };
         }
     }
 }

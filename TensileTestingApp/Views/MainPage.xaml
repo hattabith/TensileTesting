@@ -71,6 +71,8 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="File Name: " Margin="10 10 0 10"/>
                 <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" />
+                <Button Name="StartButton" Content="Start" Width="100" Height="22" Margin="10 10 0 10"
+                        ToolTip="Start/Stop data acquisition"/>
             </StackPanel>
         </StackPanel>
 
