@@ -4,6 +4,8 @@
              xmlns:local="clr-namespace:TensileTestingApp"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="Dseg7Font">
+            pack://application:,,,/Styles/Fonts/dseg7/ttf/#DSEG7 Modern
+        </FontFamily>
     </Application.Resources>
 </Application>

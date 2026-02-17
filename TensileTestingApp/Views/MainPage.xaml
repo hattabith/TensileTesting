@@ -60,19 +60,22 @@
 
         <StackPanel Orientation="Vertical" Grid.Column="2" Grid.Row="1" VerticalAlignment="Top" HorizontalAlignment="Left">
             <Label Content="Input\Output: " FontWeight="Bold" Margin="10 10 0 10" />
-            <ScrollViewer  VerticalScrollBarVisibility="Auto" Margin="10 0 0 10" Width="400" Height="200" VerticalAlignment="Bottom" VerticalContentAlignment="Top">
+            <ScrollViewer Name="OutputScrollViewer"  VerticalScrollBarVisibility="Auto" Margin="10 0 0 10" Width="400" Height="200" VerticalAlignment="Bottom" VerticalContentAlignment="Top">
                <!-- <TextBlock Name="OutputTextBlock"  FontWeight="Bold" Margin="0 0 0 0" Width="380" Background="LightGray" TextWrapping="Wrap" MinWidth="400" MinHeight="200" VerticalAlignment="Bottom"/> -->
                 <TextBox Name="OutputTextBox" Margin="0 0 0 0" Width="380" BorderThickness="1" Background="LightGray" TextWrapping="Wrap" MinWidth="400" 
                          MinHeight="200" VerticalAlignment="Bottom" ToolTip="Transmit/Recive data from COM port"/>
             </ScrollViewer>
+            <TextBlock Text="4725" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="36" FontWeight="Bold"/>
+
+            <TextBlock Text="35.2" FontFamily="{StaticResource Dseg7Font}" FontSize="36"/>
         </StackPanel>
 
         <StackPanel Orientation="Vertical" Grid.Row="1"  Grid.Column="1" >
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="File Name: " Margin="10 10 0 10"/>
-                <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" />
+                <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" IsEnabled="False"/>
                 <Button Name="StartButton" Content="Start" Width="100" Height="22" Margin="10 10 0 10"
-                        ToolTip="Start/Stop data acquisition"/>
+                        ToolTip="Start/Stop data acquisition" IsEnabled="False"/>
             </StackPanel>
         </StackPanel>
 

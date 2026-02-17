@@ -21,6 +21,7 @@ namespace TensileTestingApp.Views
         public MainPage()
         {
             InitializeComponent();
+
         }
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -106,6 +107,7 @@ namespace TensileTestingApp.Views
                         {
                             //OutputTextBlock.Text += "-> " + command + '\n';
                             OutputTextBox.Text += command + '\n';
+                            OutputScrollViewer.ScrollToEnd();
                         });
 
                         _sp.WriteToPort(command, 1000);
@@ -116,6 +118,8 @@ namespace TensileTestingApp.Views
                         {
                             //OutputTextBlock.Text += "<- " + System.DateTime.Now + " " + data + '\n';
                             OutputTextBox.Text += DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
+                            OutputScrollViewer.ScrollToEnd();
+
                         });
                     }
                 }
@@ -155,6 +159,8 @@ namespace TensileTestingApp.Views
                     COMPortComboBox.IsEnabled = true;
                     BaudRateComboBox.IsEnabled = true;
                     Address485ComboBox.IsEnabled = true;
+                    StartButton.IsEnabled = false;
+                    FileNameTextBox.IsEnabled = false;
                     break;
 
                 case ConnectionState.Connecting:
@@ -164,11 +170,15 @@ namespace TensileTestingApp.Views
                     COMPortComboBox.IsEnabled = false;
                     BaudRateComboBox.IsEnabled = false;
                     Address485ComboBox.IsEnabled = false;
+                    StartButton.IsEnabled = false;
+                    FileNameTextBox.IsEnabled = false;
                     break;
 
                 case ConnectionState.Connected:
                     ConnectButton.Content = "Disconnect";
                     ConnectButton.IsEnabled = true;
+                    StartButton.IsEnabled = true;
+                    FileNameTextBox.IsEnabled = true;
                     break;
             }
         }
