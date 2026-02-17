@@ -65,9 +65,14 @@
                 <TextBox Name="OutputTextBox" Margin="0 0 0 0" Width="380" BorderThickness="1" Background="LightGray" TextWrapping="Wrap" MinWidth="400" 
                          MinHeight="200" VerticalAlignment="Bottom" ToolTip="Transmit/Recive data from COM port"/>
             </ScrollViewer>
-            <TextBlock Text="4725" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="36" FontWeight="Bold"/>
-
-            <TextBlock Text="35.2" FontFamily="{StaticResource Dseg7Font}" FontSize="36"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <Label Content="Force:   " FontSize="36" />
+                <TextBlock Name="ForceDSeg7" Text="0.0" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="36" FontWeight="Bold" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <Label Content="Length: " FontSize="36" />
+                <TextBlock Name="LengthDSeg7" Text="0.0" FontFamily="{StaticResource Dseg7Font}" FontSize="36" VerticalAlignment="Center"/>
+            </StackPanel>    
         </StackPanel>
 
         <StackPanel Orientation="Vertical" Grid.Row="1"  Grid.Column="1" >

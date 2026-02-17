@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <PackageReference Include="OxyPlot.Wpf" Version="2.2.0" />
+    <PackageReference Include="System.IO" Version="4.3.0" />
     <PackageReference Include="System.IO.Ports" Version="10.0.1" />
     <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0" />
   </ItemGroup>

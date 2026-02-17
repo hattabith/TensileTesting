@@ -21,7 +21,6 @@ namespace TensileTestingApp.Views
         public MainPage()
         {
             InitializeComponent();
-
         }
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -94,8 +93,11 @@ namespace TensileTestingApp.Views
         }
         private async Task PollLoop(CancellationToken token)
         {
+            string resivedData = null;
+            ADCDataParser parser = new ADCDataParser();
             while (!token.IsCancellationRequested)
             {
+
                 try
                 {
                     if (_sp != null && _dCon != null && _connectionState == ConnectionState.Connected)
@@ -117,8 +119,12 @@ namespace TensileTestingApp.Views
                         await Dispatcher.InvokeAsync(() =>
                         {
                             //OutputTextBlock.Text += "<- " + System.DateTime.Now + " " + data + '\n';
-                            OutputTextBox.Text += DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
+                            resivedData = DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
+                            OutputTextBox.Text += resivedData;
                             OutputScrollViewer.ScrollToEnd();
+                            ForceDSeg7.Text = parser.ParseWithCheckSum(resivedData).Force.ToString();
+                            LengthDSeg7.Text = parser.ParseWithCheckSum(resivedData).Length.ToString();
+                            //ADCDataParser(OutputTextBox.Text)
 
                         });
                     }

@@ -1,5 +1,5 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
+
 
 namespace TensileTestingApp
 {
@@ -8,7 +8,6 @@ namespace TensileTestingApp
     /// </summary>
     public partial class App : Application
     {
-
     }
 
 }
