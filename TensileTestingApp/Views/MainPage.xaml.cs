@@ -194,6 +194,8 @@ namespace TensileTestingApp.Views
                 RecordButton.Content = "Stop";
                 _resiveState = ResiveingToFileState.Reciveing;
                 _fileName = "\\TestsData\\" + DateTime.Now.ToString() + FileNameTextBox.Text + ".csv";
+
+                // TODO: Add file record logic here
             }
         }
     }
