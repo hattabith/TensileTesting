@@ -6,9 +6,9 @@ namespace TensileTestingApp.Models
     public class ADCDataParser
     {
         private const string _patternCheckSum =
-            "^(\\d{2}\\/\\d{2}\\/\\d{4} \\d{2}:\\d{2}:\\d{2}) >([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})(\\d{2})$";
+            "^(\\d{2}\\/\\d{2}\\/\\d{4} \\d{2}:\\d{2}:\\d{2}) >([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})(\\d[A-F]{2})";
         private const string _patternNoCheckSum =
-            "^(\\d{2}\\/\\d{2}\\/\\d{4} \\d{2}:\\d{2}:\\d{2}) >([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})$";
+            "^(\\d{2}\\/\\d{2}\\/\\d{4} \\d{2}:\\d{2}:\\d{2}) >([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})([+-]?\\d{2}\\.\\d{3})";
 
         public TensileTestData ParseWithOutCheckSum(string data)
         {
@@ -18,14 +18,14 @@ namespace TensileTestingApp.Models
                 return new TensileTestData
                 {
                     Timestamp = DateTime.Parse(matches.Groups[1].Value, CultureInfo.InvariantCulture),
-                    Force = double.Parse(matches.Groups[2].Value.StartsWith("+") ? matches.Groups[2].Value[1..] : matches.Groups[2].Value, CultureInfo.InvariantCulture),
-                    Length = double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
+                    Force = 100d * double.Parse(matches.Groups[2].Value.StartsWith("+") ? matches.Groups[2].Value[1..] : matches.Groups[2].Value, CultureInfo.InvariantCulture),
+                    Length = 10d * double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
                 };
             return new TensileTestData
             {
                 Timestamp = DateTime.Now,
-                Force = 0d,
-                Length = 0d
+                Force = -1d,
+                Length = -1d
             };
         }
         public TensileTestData ParseWithCheckSum(string data)
@@ -36,15 +36,15 @@ namespace TensileTestingApp.Models
                 return new TensileTestData
                 {
                     Timestamp = DateTime.Parse(matches.Groups[1].Value, CultureInfo.InvariantCulture),
-                    Force = double.Parse(matches.Groups[2].Value.StartsWith("+") ? matches.Groups[2].Value[1..] : matches.Groups[2].Value, CultureInfo.InvariantCulture),
-                    Length = double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
+                    Force = 100d * double.Parse(matches.Groups[2].Value.StartsWith("+") ? matches.Groups[2].Value[1..] : matches.Groups[2].Value, CultureInfo.InvariantCulture),
+                    Length = 10d * double.Parse(matches.Groups[3].Value.StartsWith("+") ? matches.Groups[3].Value[1..] : matches.Groups[3].Value, CultureInfo.InvariantCulture)
                 };
             }
             return new TensileTestData
             {
                 Timestamp = DateTime.Now,
-                Force = 0d,
-                Length = 0d
+                Force = -1d,
+                Length = -1d
             };
         }
     }

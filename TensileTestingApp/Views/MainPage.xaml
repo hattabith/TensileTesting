@@ -66,12 +66,14 @@
                          MinHeight="200" VerticalAlignment="Bottom" ToolTip="Transmit/Recive data from COM port"/>
             </ScrollViewer>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                <Label Content="Force:   " FontSize="36" />
+                <Label Content="Force: " FontSize="36" Width="140"/>
                 <TextBlock Name="ForceDSeg7" Text="0.0" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="36" FontWeight="Bold" VerticalAlignment="Center" />
+                <Label Content="kN" FontSize="36" VerticalAlignment="Center" Margin="10 0 0 0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                <Label Content="Length: " FontSize="36" />
-                <TextBlock Name="LengthDSeg7" Text="0.0" FontFamily="{StaticResource Dseg7Font}" FontSize="36" VerticalAlignment="Center"/>
+                <Label Content="Length: " FontSize="36" Width="140" />
+                <TextBlock Name="LengthDSeg7" Text="0.0" FontFamily="{StaticResource Dseg7Font}" FontSize="36" VerticalAlignment="Center" />
+                <Label Content="mm" FontSize="36" VerticalAlignment="Center" Margin="10 0 0 0"/>
             </StackPanel>    
         </StackPanel>
 
@@ -79,8 +81,8 @@
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="File Name: " Margin="10 10 0 10"/>
                 <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" IsEnabled="False"/>
-                <Button Name="StartButton" Content="Start" Width="100" Height="22" Margin="10 10 0 10"
-                        ToolTip="Start/Stop data acquisition" IsEnabled="False"/>
+                <Button Name="RecordButton" Content="Start" Width="100" Height="22" Margin="10 10 0 10"
+                        ToolTip="Start/Stop data acquisition" IsEnabled="False" Click="RecordButton_Click"/>
             </StackPanel>
         </StackPanel>
 

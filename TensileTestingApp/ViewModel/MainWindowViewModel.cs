@@ -68,6 +68,5 @@ namespace TensileTestingApp.ViewModel
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PortList)));
         }
 
-
     }
 }

@@ -17,6 +17,8 @@ namespace TensileTestingApp.Views
         private Task? _pollTask;
         private DCONProtocol? _dCon;
         private ObservableCollection<TensileTestData> _testData;
+        private ResiveingToFileState _resiveState = ResiveingToFileState.Stopped;
+        private string _fileName = null;
 
         public MainPage()
         {
@@ -46,7 +48,6 @@ namespace TensileTestingApp.Views
             }
             catch (Exception ex)
             {
-                //OutputTextBlock.Text += $"Error: {ex.Message}\n";
                 OutputTextBox.Text += $"Error: {ex.Message}\n";
                 _connectionState = ConnectionState.Error;
                 UpdateUiState();
@@ -107,7 +108,6 @@ namespace TensileTestingApp.Views
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            //OutputTextBlock.Text += "-> " + command + '\n';
                             OutputTextBox.Text += command + '\n';
                             OutputScrollViewer.ScrollToEnd();
                         });
@@ -118,13 +118,11 @@ namespace TensileTestingApp.Views
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            //OutputTextBlock.Text += "<- " + System.DateTime.Now + " " + data + '\n';
                             resivedData = DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
                             OutputTextBox.Text += resivedData;
                             OutputScrollViewer.ScrollToEnd();
-                            ForceDSeg7.Text = parser.ParseWithCheckSum(resivedData).Force.ToString();
-                            LengthDSeg7.Text = parser.ParseWithCheckSum(resivedData).Length.ToString();
-                            //ADCDataParser(OutputTextBox.Text)
+                            ForceDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Force.ToString("F");
+                            LengthDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Length.ToString("F");
 
                         });
                     }
@@ -134,7 +132,7 @@ namespace TensileTestingApp.Views
                     // лог
                 }
 
-                await Task.Delay(500, token); // інтервал опитування
+                await Task.Delay(300, token); // інтервал опитування
             }
         }
         private async Task StopPolling()
@@ -165,7 +163,7 @@ namespace TensileTestingApp.Views
                     COMPortComboBox.IsEnabled = true;
                     BaudRateComboBox.IsEnabled = true;
                     Address485ComboBox.IsEnabled = true;
-                    StartButton.IsEnabled = false;
+                    RecordButton.IsEnabled = false;
                     FileNameTextBox.IsEnabled = false;
                     break;
 
@@ -176,18 +174,27 @@ namespace TensileTestingApp.Views
                     COMPortComboBox.IsEnabled = false;
                     BaudRateComboBox.IsEnabled = false;
                     Address485ComboBox.IsEnabled = false;
-                    StartButton.IsEnabled = false;
+                    RecordButton.IsEnabled = false;
                     FileNameTextBox.IsEnabled = false;
                     break;
 
                 case ConnectionState.Connected:
                     ConnectButton.Content = "Disconnect";
                     ConnectButton.IsEnabled = true;
-                    StartButton.IsEnabled = true;
+                    RecordButton.IsEnabled = true;
                     FileNameTextBox.IsEnabled = true;
                     break;
             }
         }
 
+        private void RecordButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            if (_resiveState == ResiveingToFileState.Stopped)
+            {
+                RecordButton.Content = "Stop";
+                _resiveState = ResiveingToFileState.Reciveing;
+                _fileName = "\\TestsData\\" + DateTime.Now.ToString() + FileNameTextBox.Text + ".csv";
+            }
+        }
     }
 }
