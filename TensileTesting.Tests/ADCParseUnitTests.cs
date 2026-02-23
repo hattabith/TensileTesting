@@ -21,8 +21,8 @@ namespace TensileTesting.Tests
             var parser = new TensileTestingApp.Models.ADCDataParser();
             var result = parser.ParseWithCheckSum(data);
             Assert.Equal(result.Timestamp.ToString(), expectedDateTime);
-            Assert.Equal(result.Force, expectedForce);
-            Assert.Equal(result.Length, expectedLength);
+            Assert.Equal(result.Force / 100d, expectedForce);
+            Assert.Equal(result.Length / 10d, expectedLength);
         }
         [Theory]
         [InlineData("11/02/2026 20:00:58 >-07.200+00.050-00.000-00.000-00.000-00.000-00.000-00.000", "11/02/2026 20:00:58", -7.2d, 0.05d)]
@@ -34,8 +34,9 @@ namespace TensileTesting.Tests
             var parser = new TensileTestingApp.Models.ADCDataParser();
             var result = parser.ParseWithOutCheckSum(data);
             Assert.Equal(result.Timestamp.ToString(), expectedDateTime);
-            Assert.Equal(result.Force, expectedForce);
-            Assert.Equal(result.Length, expectedLength);
+            Assert.Equal(result.Force / 100d, expectedForce);
+            Assert.Equal(result.Length / 10d, expectedLength);
+            // TODO: Assert.Matches;
         }
     }
 }

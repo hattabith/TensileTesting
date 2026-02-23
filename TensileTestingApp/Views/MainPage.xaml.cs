@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.Text;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
@@ -19,6 +21,7 @@ namespace TensileTestingApp.Views
         private ObservableCollection<TensileTestData> _testData;
         private ResiveingToFileState _resiveState = ResiveingToFileState.Stopped;
         private string _fileName = null;
+        private StreamWriter _writer;
 
         public MainPage()
         {
@@ -118,11 +121,18 @@ namespace TensileTestingApp.Views
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            resivedData = DateTime.Now.ToString(CultureInfo.InvariantCulture) + " " + data + '\n';
+                            resivedData = DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data + '\n';
                             OutputTextBox.Text += resivedData;
                             OutputScrollViewer.ScrollToEnd();
                             ForceDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Force.ToString("F");
                             LengthDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Length.ToString("F");
+                            string line = $"{parser.ParseWithOutCheckSum(resivedData).Timestamp.ToString("hh:mm:ss.ffff"):O};{parser.ParseWithOutCheckSum(resivedData).Force.ToString():F3};{parser.ParseWithOutCheckSum(resivedData).Length.ToString():F3}";
+                            if (_resiveState == ResiveingToFileState.Reciveing)
+                            {
+                                _writer.WriteLineAsync(line);
+                                _writer.FlushAsync();
+                            }
+
 
                         });
                     }
@@ -132,7 +142,7 @@ namespace TensileTestingApp.Views
                     // лог
                 }
 
-                await Task.Delay(300, token); // інтервал опитування
+                await Task.Delay(50, token); // інтервал опитування
             }
         }
         private async Task StopPolling()
@@ -185,17 +195,46 @@ namespace TensileTestingApp.Views
                     FileNameTextBox.IsEnabled = true;
                     break;
             }
+            switch (_resiveState)
+            {
+                case ResiveingToFileState.Stopped:
+                    RecordButton.Content = "Start";
+                    break;
+                case ResiveingToFileState.Reciveing:
+                    RecordButton.Content = "Stop";
+                    break;
+            }
         }
 
-        private void RecordButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        private async void RecordButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             if (_resiveState == ResiveingToFileState.Stopped)
             {
-                RecordButton.Content = "Stop";
                 _resiveState = ResiveingToFileState.Reciveing;
-                _fileName = "\\TestsData\\" + DateTime.Now.ToString() + FileNameTextBox.Text + ".csv";
+                UpdateUiState();
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+                string experimentName = $"{timestamp}_{FileNameTextBox.Text}";
+                string baseDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                    "TensileTests",
+                    experimentName);
 
-                // TODO: Add file record logic here
+                Directory.CreateDirectory(baseDir);
+
+                string filePath = Path.Combine(baseDir, $"{experimentName}.csv");
+                _fileName = filePath;
+                _writer = new StreamWriter(filePath, true, Encoding.UTF8);
+                await _writer.WriteLineAsync("DateTime;Force;Length");
+                await _writer.FlushAsync();
+
+
+            }
+            else
+            {
+                _resiveState = ResiveingToFileState.Stopped;
+                UpdateUiState();
+                await _writer.FlushAsync();
+                _writer.Close();
             }
         }
     }
