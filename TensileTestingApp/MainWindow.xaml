@@ -14,7 +14,7 @@
         MinWidth="1024"
         Icon="/Icon.png" 
         WindowStartupLocation="CenterScreen"
-        WindowState="Normal">
+        WindowState="Maximized">
 
 
     <Window.DataContext>
