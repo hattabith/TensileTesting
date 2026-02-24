@@ -126,7 +126,7 @@ namespace TensileTestingApp.Views
                             OutputScrollViewer.ScrollToEnd();
                             ForceDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Force.ToString("F");
                             LengthDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Length.ToString("F");
-                            string line = $"{parser.ParseWithOutCheckSum(resivedData).Timestamp.ToString("hh:mm:ss.ffff"):O};{parser.ParseWithOutCheckSum(resivedData).Force.ToString():F3};{parser.ParseWithOutCheckSum(resivedData).Length.ToString():F3}";
+                            string line = $"{parser.ParseWithOutCheckSum(resivedData).Timestamp.ToString("hh:mm:ss.ffff"):O};{parser.ParseWithOutCheckSum(resivedData).Force.ToString("F3"):F3};{parser.ParseWithOutCheckSum(resivedData).Length.ToString("F3"):F3}";
                             if (_resiveState == ResiveingToFileState.Reciveing)
                             {
                                 _writer.WriteLineAsync(line);
