@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
+using TensileTestingApp.Services.Abstractions;
+using TensileTestingApp.Services.Implementations;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
 
 namespace TensileTestingApp.Views
@@ -13,18 +15,33 @@ namespace TensileTestingApp.Views
     /// </summary>
     public partial class MainPage : Page
     {
-        private SerialPortCommunications? _sp;
+        private readonly ISerialPortService _serialPortService;
+        private readonly IDconProtocolService _dconProtocolService;
+        private readonly IDataParser _dataParser;
+        private readonly ILogger _logger;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
-        private DCONProtocol? _dCon;
         private ObservableCollection<TensileTestData> _testData;
         private ReceivingToFileState _resiveState = ReceivingToFileState.Stopped;
-        private string _fileName = null;
-        private StreamWriter _writer;
+        private string? _fileName;
+        private StreamWriter? _writer;
 
         public MainPage()
+            : this(new SerialPortService(), new DconProtocolService(), new AdcDataParserService(), new AppLogger())
         {
+        }
+
+        public MainPage(
+            ISerialPortService serialPortService,
+            IDconProtocolService dconProtocolService,
+            IDataParser dataParser,
+            ILogger logger)
+        {
+            _serialPortService = serialPortService;
+            _dconProtocolService = dconProtocolService;
+            _dataParser = dataParser;
+            _logger = logger;
             InitializeComponent();
         }
 
@@ -52,6 +69,7 @@ namespace TensileTestingApp.Views
             catch (Exception ex)
             {
                 OutputTextBox.Text += $"Error: {ex.Message}\n";
+                _logger.LogError("Connection button operation failed", ex);
                 _connectionState = ConnectionState.Error;
                 UpdateUiState();
             }
@@ -62,16 +80,16 @@ namespace TensileTestingApp.Views
             _connectionState = ConnectionState.Connecting;
             UpdateUiState();
 
-
-            _sp = new SerialPortCommunications(
-                COMPortComboBox.SelectedItem.ToString(),
+            _serialPortService.Configure(
+                COMPortComboBox.SelectedItem?.ToString() ?? string.Empty,
                 (int)BaudRateComboBox.SelectedItem,
                 Address485ComboBox.SelectedIndex);
 
-            await Task.Run(() => _sp.OpenConnection());
+            await Task.Run(_serialPortService.OpenConnection);
 
 
             _connectionState = ConnectionState.Connected;
+            _logger.LogInfo($"Connected to {_serialPortService.PortName} with baud {_serialPortService.BaudRate}");
             UpdateUiState();
 
         }
@@ -80,10 +98,10 @@ namespace TensileTestingApp.Views
             _connectionState = ConnectionState.Disconnecting;
             UpdateUiState();
 
-            await Task.Run(() => _sp.CloseConnection());
-            _sp = null;
+            await Task.Run(_serialPortService.CloseConnection);
 
             _connectionState = ConnectionState.Disconnected;
+            _logger.LogInfo("Disconnected from serial port");
             UpdateUiState();
         }
         private void StartPolling()
@@ -91,22 +109,21 @@ namespace TensileTestingApp.Views
             if (_pollTask != null && !_pollTask.IsCompleted)
                 return;
 
-            _dCon = new DCONProtocol(_sp.GetDeviceAddress());
+            _dconProtocolService.SetAddress(_serialPortService.DeviceAddress);
             _pollCts = new CancellationTokenSource();
             _pollTask = Task.Run(() => PollLoop(_pollCts.Token));
         }
         private async Task PollLoop(CancellationToken token)
         {
             string resivedData = null;
-            ADCDataParser parser = new ADCDataParser();
             while (!token.IsCancellationRequested)
             {
 
                 try
                 {
-                    if (_sp != null && _dCon != null && _connectionState == ConnectionState.Connected)
+                    if (_serialPortService.IsOpen && _connectionState == ConnectionState.Connected)
                     {
-                        string command = _dCon.GetReadCommand();
+                        string command = _dconProtocolService.GetReadCommand();
 
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
@@ -115,8 +132,9 @@ namespace TensileTestingApp.Views
                             OutputScrollViewer.ScrollToEnd();
                         });
 
-                        _sp.WriteToPort(command, 1000);
-                        var data = _sp.ReadFromPort(300);
+                        _serialPortService.WriteToPort(command, 1000);
+                        var data = _serialPortService.ReadFromPort(300);
+                        TensileTestData parsedData = _dataParser.ParseWithoutChecksum(DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data);
 
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
@@ -124,13 +142,13 @@ namespace TensileTestingApp.Views
                             resivedData = DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data + '\n';
                             OutputTextBox.Text += resivedData;
                             OutputScrollViewer.ScrollToEnd();
-                            ForceDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Force.ToString("F");
-                            LengthDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Length.ToString("F");
-                            string line = $"{parser.ParseWithOutCheckSum(resivedData).Timestamp.ToString("hh:mm:ss.ffff"):O};{parser.ParseWithOutCheckSum(resivedData).Force.ToString("F3"):F3};{parser.ParseWithOutCheckSum(resivedData).Length.ToString("F3"):F3}";
-                            if (_resiveState == ReceivingToFileState.Reciveing)
+                            ForceDSeg7.Text = parsedData.Force.ToString("F");
+                            LengthDSeg7.Text = parsedData.Length.ToString("F");
+                            string line = $"{parsedData.Timestamp.ToString("hh:mm:ss.ffff"):O};{parsedData.Force.ToString("F3"):F3};{parsedData.Length.ToString("F3"):F3}";
+                            if (_resiveState == ReceivingToFileState.Reciveing && _writer is not null)
                             {
-                                _writer.WriteLineAsync(line);
-                                _writer.FlushAsync();
+                                _ = _writer.WriteLineAsync(line);
+                                _ = _writer.FlushAsync();
                             }
 
 
@@ -139,7 +157,7 @@ namespace TensileTestingApp.Views
                 }
                 catch (Exception ex)
                 {
-                    // лог
+                    _logger.LogError("Polling loop failed", ex);
                 }
 
                 await Task.Delay(50, token); // інтервал опитування
@@ -226,6 +244,7 @@ namespace TensileTestingApp.Views
                 _writer = new StreamWriter(filePath, true, Encoding.UTF8);
                 await _writer.WriteLineAsync("DateTime;Force;Length");
                 await _writer.FlushAsync();
+                _logger.LogInfo($"Started recording to {_fileName}");
 
 
             }
@@ -233,8 +252,14 @@ namespace TensileTestingApp.Views
             {
                 _resiveState = ReceivingToFileState.Stopped;
                 UpdateUiState();
-                await _writer.FlushAsync();
-                _writer.Close();
+                if (_writer is not null)
+                {
+                    await _writer.FlushAsync();
+                    _writer.Close();
+                    _writer = null;
+                }
+
+                _logger.LogInfo("Stopped recording");
             }
         }
     }
