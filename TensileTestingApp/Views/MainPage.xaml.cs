@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Controls;
+using TensileTestingApp.Configuration;
 using TensileTestingApp.Models;
 using TensileTestingApp.Services.Abstractions;
 using TensileTestingApp.Services.Implementations;
@@ -19,6 +20,7 @@ namespace TensileTestingApp.Views
         private readonly IDconProtocolService _dconProtocolService;
         private readonly IDataParser _dataParser;
         private readonly ILogger _logger;
+        private readonly AppSettings _settings;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
@@ -26,9 +28,20 @@ namespace TensileTestingApp.Views
         private ReceivingToFileState _resiveState = ReceivingToFileState.Stopped;
         private string? _fileName;
         private StreamWriter? _writer;
+        private DateTime _lastFlushUtc = DateTime.UtcNow;
 
         public MainPage()
-            : this(new SerialPortService(), new DconProtocolService(), new AdcDataParserService(), new AppLogger())
+            : this(App.Settings)
+        {
+        }
+
+        public MainPage(AppSettings settings)
+            : this(
+                new SerialPortService(),
+                new DconProtocolService(),
+                new AdcDataParserService(settings.Parser),
+                new AppLogger(settings.Logging),
+                settings)
         {
         }
 
@@ -36,12 +49,14 @@ namespace TensileTestingApp.Views
             ISerialPortService serialPortService,
             IDconProtocolService dconProtocolService,
             IDataParser dataParser,
-            ILogger logger)
+            ILogger logger,
+            AppSettings settings)
         {
             _serialPortService = serialPortService;
             _dconProtocolService = dconProtocolService;
             _dataParser = dataParser;
             _logger = logger;
+            _settings = settings;
             InitializeComponent();
             Unloaded += MainPage_Unloaded;
         }
@@ -53,8 +68,9 @@ namespace TensileTestingApp.Views
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            CultureInfo.CurrentCulture = new CultureInfo("en-US");
-            CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+            CultureInfo configuredCulture = new(_settings.Acquisition.Culture);
+            CultureInfo.CurrentCulture = configuredCulture;
+            CultureInfo.CurrentUICulture = configuredCulture;
 
             // треба зробити поток для ініціалізації з'єднання, після того як ініціалізація успішно відбулася,
             // тоді робимо поток читання і виводу в текстове поле
@@ -87,9 +103,9 @@ namespace TensileTestingApp.Views
             UpdateUiState();
 
             _serialPortService.Configure(
-                COMPortComboBox.SelectedItem?.ToString() ?? string.Empty,
-                (int)BaudRateComboBox.SelectedItem,
-                Address485ComboBox.SelectedIndex);
+                COMPortComboBox.SelectedItem?.ToString() ?? _settings.SerialPort.DefaultPortName,
+                (int?)BaudRateComboBox.SelectedItem ?? _settings.SerialPort.DefaultBaudRate,
+                Address485ComboBox.SelectedIndex >= 0 ? Address485ComboBox.SelectedIndex : _settings.SerialPort.DefaultDeviceAddress);
 
             await Task.Run(_serialPortService.OpenConnection);
 
@@ -137,25 +153,40 @@ namespace TensileTestingApp.Views
                             OutputScrollViewer.ScrollToEnd();
                         });
 
-                        _serialPortService.WriteToPort(command, 1000);
-                        var data = _serialPortService.ReadFromPort(300);
+                        _serialPortService.WriteToPort(command, _settings.SerialPort.WriteTimeoutMs);
+                        var data = _serialPortService.ReadFromPort(_settings.SerialPort.ReadTimeoutMs);
                         string receivedData = DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data + '\n';
-                        TensileTestData parsedData = _dataParser.ParseWithoutChecksum(receivedData);
-                        string line = $"{parsedData.Timestamp:O};{parsedData.Force:F3};{parsedData.Length:F3}";
+                        TensileTestData parsedData = _settings.SerialPort.UseChecksum
+                            ? _dataParser.ParseWithChecksum(receivedData)
+                            : _dataParser.ParseWithoutChecksum(receivedData);
+
+                        string line = string.Join(
+                            _settings.Recording.Delimiter,
+                            parsedData.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
+                            parsedData.Force.ToString("F3", CultureInfo.InvariantCulture),
+                            parsedData.Length.ToString("F3", CultureInfo.InvariantCulture));
 
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
                             OutputTextBox.Text += receivedData;
                             OutputScrollViewer.ScrollToEnd();
-                            ForceDSeg7.Text = parsedData.Force.ToString("F");
-                            LengthDSeg7.Text = parsedData.Length.ToString("F");
+                            ForceDSeg7.Text = parsedData.Force.ToString(_settings.Ui.ForceDisplayFormat, CultureInfo.InvariantCulture);
+                            LengthDSeg7.Text = parsedData.Length.ToString(_settings.Ui.LengthDisplayFormat, CultureInfo.InvariantCulture);
                         });
 
                         if (_resiveState == ReceivingToFileState.Reciveing && _writer is not null)
                         {
                             await _writer.WriteLineAsync(line);
-                            await _writer.FlushAsync();
+                            if (_settings.Recording.AutoFlush)
+                            {
+                                await _writer.FlushAsync();
+                            }
+                            else if ((DateTime.UtcNow - _lastFlushUtc).TotalMilliseconds >= _settings.Recording.FlushIntervalMs)
+                            {
+                                await _writer.FlushAsync();
+                                _lastFlushUtc = DateTime.UtcNow;
+                            }
                         }
                     }
                 }
@@ -164,7 +195,7 @@ namespace TensileTestingApp.Views
                     _logger.LogError("Polling loop failed", ex);
                 }
 
-                await Task.Delay(50, token); // інтервал опитування
+                await Task.Delay(_settings.SerialPort.PollingIntervalMs, token);
             }
         }
         private async Task StopPolling()
@@ -236,17 +267,26 @@ namespace TensileTestingApp.Views
                 UpdateUiState();
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string experimentName = $"{timestamp}_{FileNameTextBox.Text}";
-                string baseDir = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    "TensileTests",
-                    experimentName);
+                string rootFolder = Environment.ExpandEnvironmentVariables(_settings.Recording.BaseFolder);
+                string baseDir = Path.Combine(rootFolder, experimentName);
 
                 Directory.CreateDirectory(baseDir);
 
                 string filePath = Path.Combine(baseDir, $"{experimentName}.csv");
                 _fileName = filePath;
-                _writer = new StreamWriter(filePath, true, Encoding.UTF8);
-                await _writer.WriteLineAsync("DateTime;Force;Length");
+                _lastFlushUtc = DateTime.UtcNow;
+                Encoding encoding;
+                try
+                {
+                    encoding = Encoding.GetEncoding(_settings.Recording.FileEncoding);
+                }
+                catch
+                {
+                    encoding = Encoding.UTF8;
+                }
+
+                _writer = new StreamWriter(filePath, true, encoding);
+                await _writer.WriteLineAsync(_settings.Recording.Header);
                 await _writer.FlushAsync();
                 _logger.LogInfo($"Started recording to {_fileName}");
 

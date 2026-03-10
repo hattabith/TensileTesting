@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using TensileTestingApp.Configuration;
 namespace TensileTestingApp
 {
     /// <summary>
@@ -8,12 +9,17 @@ namespace TensileTestingApp
     {
 
         public MainWindow()
+            : this(App.Settings)
+        {
+        }
+
+        public MainWindow(AppSettings settings)
         {
 
             InitializeComponent();
 
             var vm = new ViewModel.MainWindowViewModel();
-            vm.CurrentPage = new Views.MainPage();
+            vm.CurrentPage = new Views.MainPage(settings);
             this.DataContext = vm;
 
 

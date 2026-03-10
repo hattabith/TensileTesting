@@ -16,12 +16,6 @@
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized">
 
-
-    <Window.DataContext>
-        <vm:MainWindowViewModel/>
-    </Window.DataContext>
-
-
     <Frame x:Name="MainWindowFrame"
             Content="{Binding CurrentPage}"/>
 
