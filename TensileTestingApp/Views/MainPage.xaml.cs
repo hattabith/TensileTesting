@@ -43,6 +43,12 @@ namespace TensileTestingApp.Views
             _dataParser = dataParser;
             _logger = logger;
             InitializeComponent();
+            Unloaded += MainPage_Unloaded;
+        }
+
+        private async void MainPage_Unloaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            await CleanupResourcesAsync();
         }
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -115,7 +121,6 @@ namespace TensileTestingApp.Views
         }
         private async Task PollLoop(CancellationToken token)
         {
-            string resivedData = null;
             while (!token.IsCancellationRequested)
             {
 
@@ -134,25 +139,24 @@ namespace TensileTestingApp.Views
 
                         _serialPortService.WriteToPort(command, 1000);
                         var data = _serialPortService.ReadFromPort(300);
-                        TensileTestData parsedData = _dataParser.ParseWithoutChecksum(DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data);
+                        string receivedData = DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data + '\n';
+                        TensileTestData parsedData = _dataParser.ParseWithoutChecksum(receivedData);
+                        string line = $"{parsedData.Timestamp:O};{parsedData.Force:F3};{parsedData.Length:F3}";
 
                         // оновити UI:
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            resivedData = DateTime.Now.ToString("o", CultureInfo.InvariantCulture) + " " + data + '\n';
-                            OutputTextBox.Text += resivedData;
+                            OutputTextBox.Text += receivedData;
                             OutputScrollViewer.ScrollToEnd();
                             ForceDSeg7.Text = parsedData.Force.ToString("F");
                             LengthDSeg7.Text = parsedData.Length.ToString("F");
-                            string line = $"{parsedData.Timestamp.ToString("hh:mm:ss.ffff"):O};{parsedData.Force.ToString("F3"):F3};{parsedData.Length.ToString("F3"):F3}";
-                            if (_resiveState == ReceivingToFileState.Reciveing && _writer is not null)
-                            {
-                                _ = _writer.WriteLineAsync(line);
-                                _ = _writer.FlushAsync();
-                            }
-
-
                         });
+
+                        if (_resiveState == ReceivingToFileState.Reciveing && _writer is not null)
+                        {
+                            await _writer.WriteLineAsync(line);
+                            await _writer.FlushAsync();
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -255,11 +259,38 @@ namespace TensileTestingApp.Views
                 if (_writer is not null)
                 {
                     await _writer.FlushAsync();
-                    _writer.Close();
+                    _writer.Dispose();
                     _writer = null;
                 }
 
                 _logger.LogInfo("Stopped recording");
+            }
+        }
+
+        private async Task CleanupResourcesAsync()
+        {
+            try
+            {
+                await StopPolling();
+
+                if (_serialPortService.IsOpen)
+                {
+                    await Task.Run(_serialPortService.CloseConnection);
+                }
+
+                if (_writer is not null)
+                {
+                    await _writer.FlushAsync();
+                    _writer.Dispose();
+                    _writer = null;
+                }
+
+                _resiveState = ReceivingToFileState.Stopped;
+                _connectionState = ConnectionState.Disconnected;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Cleanup resources failed", ex);
             }
         }
     }
