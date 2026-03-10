@@ -19,7 +19,11 @@ namespace TensileTestingApp
             InitializeComponent();
 
             var vm = new ViewModel.MainWindowViewModel();
-            vm.CurrentPage = new Views.MainPage(settings);
+            var page = new Views.MainPage(settings)
+            {
+                DataContext = vm
+            };
+            vm.CurrentPage = page;
             this.DataContext = vm;
 
 

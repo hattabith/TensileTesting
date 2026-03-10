@@ -8,9 +8,6 @@
       mc:Ignorable="d" 
       d:DesignHeight="960" d:DesignWidth="1280" d:MinWidth="1024" d:MinHeight="768"
       Title="MainPage">
-    <Page.DataContext>
-        <ViewModel:MainWindowViewModel/>
-    </Page.DataContext>
     <Grid ShowGridLines="False">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

@@ -44,6 +44,7 @@ namespace TensileTestingApp.Configuration
         public string FileEncoding { get; set; } = "utf-8";
         public string Delimiter { get; set; } = ";";
         public bool AutoFlush { get; set; } = true;
+        public int BatchSizePoints { get; set; } = 10;
         public string Header { get; set; } = "DateTime;Force;Length";
         public int FlushIntervalMs { get; set; } = 100;
     }

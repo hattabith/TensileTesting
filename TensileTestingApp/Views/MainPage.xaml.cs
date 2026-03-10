@@ -2,11 +2,13 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Threading.Channels;
 using System.Windows.Controls;
 using TensileTestingApp.Configuration;
 using TensileTestingApp.Models;
 using TensileTestingApp.Services.Abstractions;
 using TensileTestingApp.Services.Implementations;
+using TensileTestingApp.ViewModel;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
 
 namespace TensileTestingApp.Views
@@ -24,11 +26,14 @@ namespace TensileTestingApp.Views
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
-        private ObservableCollection<TensileTestData> _testData;
+        private readonly ObservableCollection<TensileTestData> _testData = new();
         private ReceivingToFileState _resiveState = ReceivingToFileState.Stopped;
         private string? _fileName;
         private StreamWriter? _writer;
         private DateTime _lastFlushUtc = DateTime.UtcNow;
+        private Channel<TensileTestData>? _writeChannel;
+        private Task? _writerTask;
+        private CancellationTokenSource? _writerCts;
 
         public MainPage()
             : this(App.Settings)
@@ -175,18 +180,10 @@ namespace TensileTestingApp.Views
                             LengthDSeg7.Text = parsedData.Length.ToString(_settings.Ui.LengthDisplayFormat, CultureInfo.InvariantCulture);
                         });
 
-                        if (_resiveState == ReceivingToFileState.Reciveing && _writer is not null)
+                        if (_resiveState == ReceivingToFileState.Reciveing)
                         {
-                            await _writer.WriteLineAsync(line);
-                            if (_settings.Recording.AutoFlush)
-                            {
-                                await _writer.FlushAsync();
-                            }
-                            else if ((DateTime.UtcNow - _lastFlushUtc).TotalMilliseconds >= _settings.Recording.FlushIntervalMs)
-                            {
-                                await _writer.FlushAsync();
-                                _lastFlushUtc = DateTime.UtcNow;
-                            }
+                            await Dispatcher.InvokeAsync(() => AppendDataPoint(parsedData));
+                            await EnqueueForFileWriteAsync(parsedData, token);
                         }
                     }
                 }
@@ -263,47 +260,13 @@ namespace TensileTestingApp.Views
         {
             if (_resiveState == ReceivingToFileState.Stopped)
             {
-                _resiveState = ReceivingToFileState.Reciveing;
-                UpdateUiState();
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string experimentName = $"{timestamp}_{FileNameTextBox.Text}";
-                string rootFolder = Environment.ExpandEnvironmentVariables(_settings.Recording.BaseFolder);
-                string baseDir = Path.Combine(rootFolder, experimentName);
-
-                Directory.CreateDirectory(baseDir);
-
-                string filePath = Path.Combine(baseDir, $"{experimentName}.csv");
-                _fileName = filePath;
-                _lastFlushUtc = DateTime.UtcNow;
-                Encoding encoding;
-                try
-                {
-                    encoding = Encoding.GetEncoding(_settings.Recording.FileEncoding);
-                }
-                catch
-                {
-                    encoding = Encoding.UTF8;
-                }
-
-                _writer = new StreamWriter(filePath, true, encoding);
-                await _writer.WriteLineAsync(_settings.Recording.Header);
-                await _writer.FlushAsync();
-                _logger.LogInfo($"Started recording to {_fileName}");
+                await StartRecordingAsync();
 
 
             }
             else
             {
-                _resiveState = ReceivingToFileState.Stopped;
-                UpdateUiState();
-                if (_writer is not null)
-                {
-                    await _writer.FlushAsync();
-                    _writer.Dispose();
-                    _writer = null;
-                }
-
-                _logger.LogInfo("Stopped recording");
+                await StopRecordingAsync();
             }
         }
 
@@ -318,12 +281,15 @@ namespace TensileTestingApp.Views
                     await Task.Run(_serialPortService.CloseConnection);
                 }
 
-                if (_writer is not null)
+                if (_resiveState == ReceivingToFileState.Reciveing || _writerTask is not null || _writer is not null)
                 {
-                    await _writer.FlushAsync();
-                    _writer.Dispose();
-                    _writer = null;
+                    await StopRecordingAsync();
                 }
+
+                _writeChannel = null;
+                _writerTask = null;
+                _writerCts?.Dispose();
+                _writerCts = null;
 
                 _resiveState = ReceivingToFileState.Stopped;
                 _connectionState = ConnectionState.Disconnected;
@@ -331,6 +297,168 @@ namespace TensileTestingApp.Views
             catch (Exception ex)
             {
                 _logger.LogError("Cleanup resources failed", ex);
+            }
+        }
+
+        private async Task StartRecordingAsync()
+        {
+            _resiveState = ReceivingToFileState.Reciveing;
+            UpdateUiState();
+
+            _testData.Clear();
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.ResetLiveData();
+            }
+
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string experimentName = $"{timestamp}_{FileNameTextBox.Text}";
+            string rootFolder = Environment.ExpandEnvironmentVariables(_settings.Recording.BaseFolder);
+            string baseDir = Path.Combine(rootFolder, experimentName);
+
+            Directory.CreateDirectory(baseDir);
+
+            string filePath = Path.Combine(baseDir, $"{experimentName}.csv");
+            _fileName = filePath;
+            _lastFlushUtc = DateTime.UtcNow;
+
+            Encoding encoding;
+            try
+            {
+                encoding = Encoding.GetEncoding(_settings.Recording.FileEncoding);
+            }
+            catch
+            {
+                encoding = Encoding.UTF8;
+            }
+
+            _writer = new StreamWriter(filePath, true, encoding);
+            await _writer.WriteLineAsync(_settings.Recording.Header);
+            await _writer.FlushAsync();
+
+            _writerCts = new CancellationTokenSource();
+            _writeChannel = Channel.CreateUnbounded<TensileTestData>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = true
+            });
+            _writerTask = Task.Run(() => RunBatchWriterAsync(_writer, _writeChannel.Reader, _writerCts.Token));
+
+            _logger.LogInfo($"Started recording to {_fileName}");
+        }
+
+        private async Task StopRecordingAsync()
+        {
+            _resiveState = ReceivingToFileState.Stopped;
+            UpdateUiState();
+
+            if (_writeChannel is not null)
+            {
+                _writeChannel.Writer.TryComplete();
+            }
+
+            if (_writerTask is not null)
+            {
+                try
+                {
+                    await _writerTask;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Batch writer task failed", ex);
+                }
+            }
+
+            _writerCts?.Cancel();
+            _writerCts?.Dispose();
+            _writerCts = null;
+            _writeChannel = null;
+            _writerTask = null;
+
+            if (_writer is not null)
+            {
+                await _writer.FlushAsync();
+                _writer.Dispose();
+                _writer = null;
+            }
+
+            _logger.LogInfo($"Stopped recording. Points collected: {_testData.Count}");
+        }
+
+        private void AppendDataPoint(TensileTestData data)
+        {
+            _testData.Add(data);
+            if (_testData.Count > _settings.Acquisition.MaxUiBufferLines)
+            {
+                _testData.RemoveAt(0);
+            }
+
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.AddLiveDataPoint(data);
+            }
+        }
+
+        private async Task EnqueueForFileWriteAsync(TensileTestData data, CancellationToken token)
+        {
+            if (_writeChannel is null)
+            {
+                return;
+            }
+
+            await _writeChannel.Writer.WriteAsync(data, token);
+        }
+
+        private async Task RunBatchWriterAsync(StreamWriter writer, ChannelReader<TensileTestData> reader, CancellationToken token)
+        {
+            int batchSize = Math.Max(1, _settings.Recording.BatchSizePoints);
+            List<TensileTestData> batch = new(batchSize);
+
+            while (await reader.WaitToReadAsync(token))
+            {
+                while (reader.TryRead(out TensileTestData? item))
+                {
+                    batch.Add(item);
+                    if (batch.Count >= batchSize)
+                    {
+                        await WriteBatchAsync(writer, batch);
+                        batch.Clear();
+                    }
+                }
+            }
+
+            if (batch.Count > 0)
+            {
+                await WriteBatchAsync(writer, batch);
+            }
+        }
+
+        private async Task WriteBatchAsync(StreamWriter writer, List<TensileTestData> batch)
+        {
+            StringBuilder builder = new();
+            foreach (TensileTestData data in batch)
+            {
+                string line = string.Join(
+                    _settings.Recording.Delimiter,
+                    data.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
+                    data.Force.ToString("F3", CultureInfo.InvariantCulture),
+                    data.Length.ToString("F3", CultureInfo.InvariantCulture));
+                builder.AppendLine(line);
+            }
+
+            await writer.WriteAsync(builder.ToString());
+
+            if (_settings.Recording.AutoFlush)
+            {
+                await writer.FlushAsync();
+                _lastFlushUtc = DateTime.UtcNow;
+                return;
+            }
+
+            if ((DateTime.UtcNow - _lastFlushUtc).TotalMilliseconds >= _settings.Recording.FlushIntervalMs)
+            {
+                await writer.FlushAsync();
+                _lastFlushUtc = DateTime.UtcNow;
             }
         }
     }

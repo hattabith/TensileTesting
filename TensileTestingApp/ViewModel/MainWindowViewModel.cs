@@ -1,14 +1,19 @@
 ﻿using OxyPlot;
+using OxyPlot.Axes;
 using OxyPlot.Series;
 using System.ComponentModel;
 using System.IO.Ports;
 using System.Windows.Controls;
+using TensileTestingApp.Models;
 
 namespace TensileTestingApp.ViewModel
 {
     public partial class MainWindowViewModel : INotifyPropertyChanged
     {
         private Frame _mainWindowFrame;
+        private readonly LineSeries _forceTimeSeries;
+        private readonly LineSeries _lengthTimeSeries;
+        private readonly LineSeries _forceLengthSeries;
 
 
         public Frame MainWindowFrame
@@ -32,21 +37,29 @@ namespace TensileTestingApp.ViewModel
         {
             this.ForcePlot = new PlotModel
             {
-                Title = "Force Data"
+                Title = "Force vs Time"
             };
-            var series1 = new LineSeries
+            this.ForcePlot.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Time", StringFormat = "HH:mm:ss" });
+            this.ForcePlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Force (kN)" });
+            _forceTimeSeries = new LineSeries
             {
-                Title = "Line Force",
+                Title = "Force",
                 Color = OxyColors.Red
             };
-            series1.Points.Add(new DataPoint(0, 1));
-            series1.Points.Add(new DataPoint(10, 5));
-            this.ForcePlot.Series.Add(series1);
-            this.ForcePlot.Series.Add(new FunctionSeries(Math.Cos, 0, 10, 0.1, "cos(x)"));
-            this.LengthPlot = new PlotModel { Title = "Length Data" };
-            this.LengthPlot.Series.Add(new FunctionSeries(Math.Tan, 0, 10, 0.1, "tan(x)"));
-            this.ForceLengthPlot = new PlotModel { Title = "Force/Length Data" };
-            this.ForceLengthPlot.Series.Add(new FunctionSeries(Math.Exp, 0, 10, 0.1, "exp(x)"));
+            this.ForcePlot.Series.Add(_forceTimeSeries);
+
+            this.LengthPlot = new PlotModel { Title = "Length vs Time" };
+            this.LengthPlot.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Time", StringFormat = "HH:mm:ss" });
+            this.LengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Length (mm)" });
+            _lengthTimeSeries = new LineSeries { Title = "Length", Color = OxyColors.DodgerBlue };
+            this.LengthPlot.Series.Add(_lengthTimeSeries);
+
+            this.ForceLengthPlot = new PlotModel { Title = "Force vs Length" };
+            this.ForceLengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Length (mm)" });
+            this.ForceLengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Force (kN)" });
+            _forceLengthSeries = new LineSeries { Title = "Force-Length", Color = OxyColors.ForestGreen };
+            this.ForceLengthPlot.Series.Add(_forceLengthSeries);
+
             this.PortList = SerialPort.GetPortNames().ToList<string>();
             this.RS485Address = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 
@@ -66,6 +79,28 @@ namespace TensileTestingApp.ViewModel
         {
             this.PortList = SerialPort.GetPortNames().ToList<string>();
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PortList)));
+        }
+
+        public void ResetLiveData()
+        {
+            _forceTimeSeries.Points.Clear();
+            _lengthTimeSeries.Points.Clear();
+            _forceLengthSeries.Points.Clear();
+            ForcePlot.InvalidatePlot(true);
+            LengthPlot.InvalidatePlot(true);
+            ForceLengthPlot.InvalidatePlot(true);
+        }
+
+        public void AddLiveDataPoint(TensileTestData data)
+        {
+            double timeX = DateTimeAxis.ToDouble(data.Timestamp);
+            _forceTimeSeries.Points.Add(new DataPoint(timeX, data.Force));
+            _lengthTimeSeries.Points.Add(new DataPoint(timeX, data.Length));
+            _forceLengthSeries.Points.Add(new DataPoint(data.Length, data.Force));
+
+            ForcePlot.InvalidatePlot(true);
+            LengthPlot.InvalidatePlot(true);
+            ForceLengthPlot.InvalidatePlot(true);
         }
 
     }
