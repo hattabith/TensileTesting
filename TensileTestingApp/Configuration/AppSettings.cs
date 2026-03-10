@@ -8,6 +8,7 @@ namespace TensileTestingApp.Configuration
         public RecordingSettings Recording { get; set; } = new();
         public LoggingSettings Logging { get; set; } = new();
         public UiSettings Ui { get; set; } = new();
+        public FilterSettings Filter { get; set; } = new();
     }
 
     public class SerialPortSettings
@@ -45,7 +46,7 @@ namespace TensileTestingApp.Configuration
         public string Delimiter { get; set; } = ";";
         public bool AutoFlush { get; set; } = true;
         public int BatchSizePoints { get; set; } = 10;
-        public string Header { get; set; } = "DateTime;Force;Length";
+        public string Header { get; set; } = "DateTime;RawForce;FilteredForce;Length";
         public int FlushIntervalMs { get; set; } = 100;
     }
 
@@ -70,5 +71,20 @@ namespace TensileTestingApp.Configuration
         public string DateTimeFormat { get; set; } = "O";
         public string ForceDisplayFormat { get; set; } = "F";
         public string LengthDisplayFormat { get; set; } = "F";
+    }
+
+    public class FilterSettings
+    {
+        /// <summary>Enable real-time smoothing of the Force channel.</summary>
+        public bool EnableForceFilter { get; set; } = true;
+
+        /// <summary>Filter algorithm: "EMA" (Exponential Moving Average) or "MA" (Moving Average).</summary>
+        public string Type { get; set; } = "EMA";
+
+        /// <summary>EMA smoothing factor α ∈ (0, 1]. Lower = more smoothing. Default 0.1.</summary>
+        public double EmaAlpha { get; set; } = 0.1;
+
+        /// <summary>Window size for Moving Average filter (number of samples). Default 10.</summary>
+        public int MovingAverageWindow { get; set; } = 10;
     }
 }

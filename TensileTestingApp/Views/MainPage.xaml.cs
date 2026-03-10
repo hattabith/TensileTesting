@@ -23,6 +23,7 @@ namespace TensileTestingApp.Views
         private readonly IDataParser _dataParser;
         private readonly ILogger _logger;
         private readonly AppSettings _settings;
+        private readonly ISignalFilter _forceFilter;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
@@ -62,8 +63,21 @@ namespace TensileTestingApp.Views
             _dataParser = dataParser;
             _logger = logger;
             _settings = settings;
+            _forceFilter = CreateForceFilter(settings.Filter);
             InitializeComponent();
             Unloaded += MainPage_Unloaded;
+        }
+
+        private static ISignalFilter CreateForceFilter(FilterSettings settings)
+        {
+            if (!settings.EnableForceFilter)
+                return new ExponentialMovingAverageFilter(1.0); // alpha=1 → passthrough
+
+            return settings.Type.ToUpperInvariant() switch
+            {
+                "MA" or "MOVINGAVERAGE" => new MovingAverageFilter(Math.Max(1, settings.MovingAverageWindow)),
+                _ => new ExponentialMovingAverageFilter(Math.Clamp(settings.EmaAlpha, 0.001, 1.0))
+            };
         }
 
         private async void MainPage_Unloaded(object sender, System.Windows.RoutedEventArgs e)
@@ -164,6 +178,8 @@ namespace TensileTestingApp.Views
                         TensileTestData parsedData = _settings.SerialPort.UseChecksum
                             ? _dataParser.ParseWithChecksum(receivedData)
                             : _dataParser.ParseWithoutChecksum(receivedData);
+
+                        parsedData.FilteredForce = _forceFilter.Filter(parsedData.Force);
 
                         string line = string.Join(
                             _settings.Recording.Delimiter,
@@ -306,6 +322,7 @@ namespace TensileTestingApp.Views
             UpdateUiState();
 
             _testData.Clear();
+            _forceFilter.Reset();
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.ResetLiveData();
@@ -442,6 +459,7 @@ namespace TensileTestingApp.Views
                     _settings.Recording.Delimiter,
                     data.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
                     data.Force.ToString("F3", CultureInfo.InvariantCulture),
+                    data.FilteredForce.ToString("F3", CultureInfo.InvariantCulture),
                     data.Length.ToString("F3", CultureInfo.InvariantCulture));
                 builder.AppendLine(line);
             }

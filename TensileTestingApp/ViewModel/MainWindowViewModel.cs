@@ -12,6 +12,7 @@ namespace TensileTestingApp.ViewModel
     {
         private Frame _mainWindowFrame;
         private readonly LineSeries _forceTimeSeries;
+        private readonly LineSeries _rawForceTimeSeries;
         private readonly LineSeries _lengthTimeSeries;
         private readonly LineSeries _forceLengthSeries;
 
@@ -41,11 +42,20 @@ namespace TensileTestingApp.ViewModel
             };
             this.ForcePlot.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Time", StringFormat = "HH:mm:ss" });
             this.ForcePlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Force (kN)" });
+            _rawForceTimeSeries = new LineSeries
+            {
+                Title = "Raw Force",
+                Color = OxyColor.FromAColor(80, OxyColors.Red),
+                StrokeThickness = 1.0,
+                LineStyle = LineStyle.Solid
+            };
             _forceTimeSeries = new LineSeries
             {
-                Title = "Force",
-                Color = OxyColors.Red
+                Title = "Filtered Force",
+                Color = OxyColors.Red,
+                StrokeThickness = 2.0
             };
+            this.ForcePlot.Series.Add(_rawForceTimeSeries);
             this.ForcePlot.Series.Add(_forceTimeSeries);
 
             this.LengthPlot = new PlotModel { Title = "Length vs Time" };
@@ -57,7 +67,7 @@ namespace TensileTestingApp.ViewModel
             this.ForceLengthPlot = new PlotModel { Title = "Force vs Length" };
             this.ForceLengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Length (mm)" });
             this.ForceLengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Force (kN)" });
-            _forceLengthSeries = new LineSeries { Title = "Force-Length", Color = OxyColors.ForestGreen };
+            _forceLengthSeries = new LineSeries { Title = "Filtered Force-Length", Color = OxyColors.ForestGreen };
             this.ForceLengthPlot.Series.Add(_forceLengthSeries);
 
             this.PortList = SerialPort.GetPortNames().ToList<string>();
@@ -83,6 +93,7 @@ namespace TensileTestingApp.ViewModel
 
         public void ResetLiveData()
         {
+            _rawForceTimeSeries.Points.Clear();
             _forceTimeSeries.Points.Clear();
             _lengthTimeSeries.Points.Clear();
             _forceLengthSeries.Points.Clear();
@@ -94,9 +105,10 @@ namespace TensileTestingApp.ViewModel
         public void AddLiveDataPoint(TensileTestData data)
         {
             double timeX = DateTimeAxis.ToDouble(data.Timestamp);
-            _forceTimeSeries.Points.Add(new DataPoint(timeX, data.Force));
+            _rawForceTimeSeries.Points.Add(new DataPoint(timeX, data.Force));
+            _forceTimeSeries.Points.Add(new DataPoint(timeX, data.FilteredForce));
             _lengthTimeSeries.Points.Add(new DataPoint(timeX, data.Length));
-            _forceLengthSeries.Points.Add(new DataPoint(data.Length, data.Force));
+            _forceLengthSeries.Points.Add(new DataPoint(data.Length, data.FilteredForce));
 
             ForcePlot.InvalidatePlot(true);
             LengthPlot.InvalidatePlot(true);
