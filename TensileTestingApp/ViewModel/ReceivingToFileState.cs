@@ -2,7 +2,7 @@
 {
     public partial class MainWindowViewModel
     {
-        public enum ResiveingToFileState
+        public enum ReceivingToFileState
         {
             Reciveing,
             Stopped

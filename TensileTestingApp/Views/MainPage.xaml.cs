@@ -19,7 +19,7 @@ namespace TensileTestingApp.Views
         private Task? _pollTask;
         private DCONProtocol? _dCon;
         private ObservableCollection<TensileTestData> _testData;
-        private ResiveingToFileState _resiveState = ResiveingToFileState.Stopped;
+        private ReceivingToFileState _resiveState = ReceivingToFileState.Stopped;
         private string _fileName = null;
         private StreamWriter _writer;
 
@@ -127,7 +127,7 @@ namespace TensileTestingApp.Views
                             ForceDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Force.ToString("F");
                             LengthDSeg7.Text = parser.ParseWithOutCheckSum(resivedData).Length.ToString("F");
                             string line = $"{parser.ParseWithOutCheckSum(resivedData).Timestamp.ToString("hh:mm:ss.ffff"):O};{parser.ParseWithOutCheckSum(resivedData).Force.ToString("F3"):F3};{parser.ParseWithOutCheckSum(resivedData).Length.ToString("F3"):F3}";
-                            if (_resiveState == ResiveingToFileState.Reciveing)
+                            if (_resiveState == ReceivingToFileState.Reciveing)
                             {
                                 _writer.WriteLineAsync(line);
                                 _writer.FlushAsync();
@@ -197,10 +197,10 @@ namespace TensileTestingApp.Views
             }
             switch (_resiveState)
             {
-                case ResiveingToFileState.Stopped:
+                case ReceivingToFileState.Stopped:
                     RecordButton.Content = "Start";
                     break;
-                case ResiveingToFileState.Reciveing:
+                case ReceivingToFileState.Reciveing:
                     RecordButton.Content = "Stop";
                     break;
             }
@@ -208,9 +208,9 @@ namespace TensileTestingApp.Views
 
         private async void RecordButton_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (_resiveState == ResiveingToFileState.Stopped)
+            if (_resiveState == ReceivingToFileState.Stopped)
             {
-                _resiveState = ResiveingToFileState.Reciveing;
+                _resiveState = ReceivingToFileState.Reciveing;
                 UpdateUiState();
                 string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
                 string experimentName = $"{timestamp}_{FileNameTextBox.Text}";
@@ -231,7 +231,7 @@ namespace TensileTestingApp.Views
             }
             else
             {
-                _resiveState = ResiveingToFileState.Stopped;
+                _resiveState = ReceivingToFileState.Stopped;
                 UpdateUiState();
                 await _writer.FlushAsync();
                 _writer.Close();

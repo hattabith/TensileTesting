@@ -2,7 +2,7 @@
 {
     public partial class MainWindowViewModel
     {
-        public enum SpecimentType
+        public enum SpecimenType
         {
             Cylindrical,
             NarrowFlat,
