@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Planning folder
 Planning/
+
+#.code-workspace
+*.code-workspace
