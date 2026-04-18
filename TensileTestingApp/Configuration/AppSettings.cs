@@ -78,13 +78,16 @@ namespace TensileTestingApp.Configuration
         /// <summary>Enable real-time smoothing of the Force channel.</summary>
         public bool EnableForceFilter { get; set; } = true;
 
-        /// <summary>Filter algorithm: "EMA" (Exponential Moving Average) or "MA" (Moving Average).</summary>
-        public string Type { get; set; } = "EMA";
+        /// <summary>Filter algorithm: "SG" (Savitzky-Golay), "EMA" or "MA".</summary>
+        public string Type { get; set; } = "SG";
 
         /// <summary>EMA smoothing factor α ∈ (0, 1]. Lower = more smoothing. Default 0.1.</summary>
         public double EmaAlpha { get; set; } = 0.1;
 
         /// <summary>Window size for Moving Average filter (number of samples). Default 10.</summary>
         public int MovingAverageWindow { get; set; } = 10;
+
+        /// <summary>Window size for Savitzky-Golay smoothing. Supported values: 5 or 7.</summary>
+        public int SavitzkyGolayWindow { get; set; } = 7;
     }
 }

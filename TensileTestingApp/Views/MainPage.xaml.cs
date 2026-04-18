@@ -75,6 +75,7 @@ namespace TensileTestingApp.Views
 
             return settings.Type.ToUpperInvariant() switch
             {
+                "SG" or "SAVGOL" or "SAVITZKYGOLAY" => new SavitzkyGolayFilter(settings.SavitzkyGolayWindow),
                 "MA" or "MOVINGAVERAGE" => new MovingAverageFilter(Math.Max(1, settings.MovingAverageWindow)),
                 _ => new ExponentialMovingAverageFilter(Math.Clamp(settings.EmaAlpha, 0.001, 1.0))
             };
