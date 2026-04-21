@@ -1,14 +1,13 @@
 ﻿using OxyPlot;
 using OxyPlot.Axes;
 using OxyPlot.Series;
-using System.ComponentModel;
 using System.IO.Ports;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
 
 namespace TensileTestingApp.ViewModel
 {
-    public partial class MainWindowViewModel : INotifyPropertyChanged
+    public partial class MainWindowViewModel : ViewModelBase
     {
         private Frame _mainWindowFrame;
         private readonly LineSeries _forceTimeSeries;
@@ -20,18 +19,8 @@ namespace TensileTestingApp.ViewModel
 
         public Frame MainWindowFrame
         {
-            get { return _mainWindowFrame; }
-            set
-            {
-                if (_mainWindowFrame != value)
-                {
-                    {
-                        _mainWindowFrame = value;
-                        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MainWindowFrame)));
-
-                    }
-                }
-            }
+            get => _mainWindowFrame;
+            set => SetProperty(ref _mainWindowFrame, value);
         }
         public Page CurrentPage { get; set; }
 
@@ -88,9 +77,6 @@ namespace TensileTestingApp.ViewModel
             this.RS485Address = new List<int> { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
 
         }
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-
         public PlotModel ForcePlot { get; private set; }
         public PlotModel LengthPlot { get; private set; }
         public PlotModel ForceLengthPlot { get; private set; }
@@ -102,7 +88,7 @@ namespace TensileTestingApp.ViewModel
         public void UpdatePortList()
         {
             this.PortList = SerialPort.GetPortNames().ToList<string>();
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PortList)));
+            OnPropertyChanged(nameof(PortList));
         }
 
         public void ResetLiveData()
