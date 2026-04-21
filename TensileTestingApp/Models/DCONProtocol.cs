@@ -1,5 +1,4 @@
-﻿namespace TensileTestingApp.Models
-{
+﻿namespace TensileTestingApp.Models;
     public class DCONProtocol
     {
         string _address;
@@ -78,4 +77,3 @@
             return checksum.ToString("X2");  // Convert to hexadecimal string with 2 digits
         }
     }
-}

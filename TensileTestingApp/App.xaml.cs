@@ -6,8 +6,7 @@ using System.Windows;
 using TensileTestingApp.Configuration;
 using TensileTestingApp.Views;
 
-namespace TensileTestingApp
-{
+namespace TensileTestingApp;
     public partial class App : Application
     {
         private ServiceProvider? _serviceProvider;
@@ -129,4 +128,3 @@ namespace TensileTestingApp
             Debug.WriteLine($"[CRASH:{source}] {ex?.Message}");
         }
     }
-}

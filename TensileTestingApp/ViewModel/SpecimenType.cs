@@ -1,5 +1,4 @@
-﻿namespace TensileTestingApp.ViewModel
-{
+﻿namespace TensileTestingApp.ViewModel;
     public partial class MainWindowViewModel
     {
         public enum SpecimenType
@@ -14,4 +13,3 @@
 
 
     }
-}

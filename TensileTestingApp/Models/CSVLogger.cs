@@ -1,8 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.IO;
 
-namespace TensileTestingApp.Models
-{
+namespace TensileTestingApp.Models;
     public class CSVLogger : IAsyncDisposable
     {
         private StreamWriter? _writer;
@@ -75,4 +74,3 @@ namespace TensileTestingApp.Models
             await StopLoggingAsync();
         }
     }
-}

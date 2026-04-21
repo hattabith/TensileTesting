@@ -1,7 +1,6 @@
 ﻿using System.IO.Ports;
 
-namespace TensileTestingApp.Models
-{
+namespace TensileTestingApp.Models;
     public class SerialPortCommunications
     {
         private SerialPort port;
@@ -128,4 +127,3 @@ namespace TensileTestingApp.Models
             return new List<int> { 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200 };
         }
     }
-}

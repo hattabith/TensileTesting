@@ -1,7 +1,6 @@
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     /// <summary>
     /// Savitzky-Golay smoothing filter with fixed symmetric coefficients.
     /// Supported window sizes: 5 and 7 points.
@@ -50,4 +49,3 @@ namespace TensileTestingApp.Services.Implementations
             _buffer.Clear();
         }
     }
-}

@@ -1,5 +1,4 @@
-namespace TensileTestingApp.Configuration
-{
+namespace TensileTestingApp.Configuration;
     public class AppSettings
     {
         public SerialPortSettings SerialPort { get; set; } = new();
@@ -91,4 +90,3 @@ namespace TensileTestingApp.Configuration
         /// <summary>Window size for Savitzky-Golay smoothing. Supported values: 5 or 7.</summary>
         public int SavitzkyGolayWindow { get; set; } = 7;
     }
-}

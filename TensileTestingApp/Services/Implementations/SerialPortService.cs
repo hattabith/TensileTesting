@@ -1,8 +1,7 @@
 using System.IO.Ports;
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     public class SerialPortService : ISerialPortService
     {
         private readonly SerialPort _port = new();
@@ -128,4 +127,3 @@ namespace TensileTestingApp.Services.Implementations
             }
         }
     }
-}

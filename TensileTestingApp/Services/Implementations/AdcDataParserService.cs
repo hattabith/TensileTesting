@@ -4,8 +4,7 @@ using TensileTestingApp.Configuration;
 using TensileTestingApp.Models;
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     public class AdcDataParserService : IDataParser
     {
         private readonly ParserSettings _settings;
@@ -68,4 +67,3 @@ namespace TensileTestingApp.Services.Implementations
             };
         }
     }
-}

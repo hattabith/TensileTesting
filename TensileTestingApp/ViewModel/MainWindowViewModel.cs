@@ -5,8 +5,7 @@ using System.IO.Ports;
 using System.Windows.Controls;
 using TensileTestingApp.Models;
 
-namespace TensileTestingApp.ViewModel
-{
+namespace TensileTestingApp.ViewModel;
     public partial class MainWindowViewModel : ViewModelBase
     {
         private Frame _mainWindowFrame;
@@ -118,4 +117,3 @@ namespace TensileTestingApp.ViewModel
         }
 
     }
-}

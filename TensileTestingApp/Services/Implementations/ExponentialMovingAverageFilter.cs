@@ -1,7 +1,6 @@
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     /// <summary>
     /// Exponential Moving Average filter.
     /// y[n] = α · x[n] + (1 − α) · y[n−1]
@@ -43,4 +42,3 @@ namespace TensileTestingApp.Services.Implementations
             _previous = 0.0;
         }
     }
-}

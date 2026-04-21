@@ -11,8 +11,7 @@ using TensileTestingApp.Services.Implementations;
 using TensileTestingApp.ViewModel;
 using static TensileTestingApp.ViewModel.MainWindowViewModel;
 
-namespace TensileTestingApp.Views
-{
+namespace TensileTestingApp.Views;
     /// <summary>
     /// Interaction logic for MainPage.xaml
     /// </summary>
@@ -481,4 +480,3 @@ namespace TensileTestingApp.Views
             }
         }
     }
-}

@@ -1,7 +1,6 @@
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     /// <summary>
     /// Simple uniform moving average (sliding window) filter.
     /// Output is the arithmetic mean of the last <see cref="WindowSize"/> samples.
@@ -42,4 +41,3 @@ namespace TensileTestingApp.Services.Implementations
             _sum = 0.0;
         }
     }
-}

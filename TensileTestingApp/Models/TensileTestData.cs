@@ -1,5 +1,4 @@
-﻿namespace TensileTestingApp.Models
-{
+﻿namespace TensileTestingApp.Models;
     public class TensileTestData
     {
         public DateTime Timestamp { get; set; }
@@ -12,4 +11,3 @@
         /// <summary>Smoothed length value produced by the configured signal filter.</summary>
         public double FilteredLength { get; set; }
     }
-}

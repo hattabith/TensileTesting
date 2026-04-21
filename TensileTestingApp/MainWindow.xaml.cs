@@ -2,8 +2,7 @@
 using TensileTestingApp.ViewModel;
 using TensileTestingApp.Views;
 
-namespace TensileTestingApp
-{
+namespace TensileTestingApp;
     public partial class MainWindow : Window
     {
         public MainWindow(MainWindowViewModel viewModel, MainPage mainPage)
@@ -15,4 +14,3 @@ namespace TensileTestingApp
             this.DataContext = viewModel;
         }
     }
-}

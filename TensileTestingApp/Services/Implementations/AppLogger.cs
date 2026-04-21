@@ -4,8 +4,7 @@ using System.Text;
 using TensileTestingApp.Configuration;
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     public class AppLogger : ILogger
     {
         private readonly LoggingSettings _settings;
@@ -113,4 +112,3 @@ namespace TensileTestingApp.Services.Implementations
             }
         }
     }
-}

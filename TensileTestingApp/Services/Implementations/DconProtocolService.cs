@@ -1,7 +1,6 @@
 using TensileTestingApp.Services.Abstractions;
 
-namespace TensileTestingApp.Services.Implementations
-{
+namespace TensileTestingApp.Services.Implementations;
     public class DconProtocolService : IDconProtocolService
     {
         private string _address = "00";
@@ -30,4 +29,3 @@ namespace TensileTestingApp.Services.Implementations
             return checksum.ToString("X2");
         }
     }
-}

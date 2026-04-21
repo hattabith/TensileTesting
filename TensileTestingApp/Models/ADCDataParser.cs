@@ -1,8 +1,7 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace TensileTestingApp.Models
-{
+namespace TensileTestingApp.Models;
     public class ADCDataParser
     {
         // New RegExp
@@ -54,4 +53,3 @@ namespace TensileTestingApp.Models
             };
         }
     }
-}

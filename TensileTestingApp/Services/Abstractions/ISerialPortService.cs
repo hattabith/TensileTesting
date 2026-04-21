@@ -1,5 +1,4 @@
-namespace TensileTestingApp.Services.Abstractions
-{
+namespace TensileTestingApp.Services.Abstractions;
     public interface ISerialPortService
     {
         string PortName { get; }
@@ -17,4 +16,3 @@ namespace TensileTestingApp.Services.Abstractions
         string ReadFromPort(int timeout);
         string ReadFromPort();
     }
-}
