@@ -365,5 +365,9 @@ FodyWeavers.xsd
 # Planning folder
 Planning/
 
+# GitHub folder for issue templates, workflows, and other GitHub-specific files
+.github/
+
+
 #.code-workspace
 *.code-workspace
