@@ -1,26 +1,42 @@
-﻿using System.Windows;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System.Windows;
 using TensileTestingApp.Configuration;
-
+using TensileTestingApp.Views;
 
 namespace TensileTestingApp
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
-        public static AppSettings Settings { get; private set; } = new();
+        private ServiceProvider? _serviceProvider;
 
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
 
-            Settings = LoadSettings();
+            var services = new ServiceCollection();
+            ConfigureServices(services);
+            _serviceProvider = services.BuildServiceProvider();
 
-            var mainWindow = new MainWindow(Settings);
+            var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
             mainWindow.Show();
+        }
+
+        private static void ConfigureServices(IServiceCollection services)
+        {
+            var settings = LoadSettings();
+            services.AddSingleton(settings);
+
+            services.AddTransient<ViewModel.MainWindowViewModel>();
+            services.AddTransient<MainPage>();
+            services.AddTransient<MainWindow>();
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            (_serviceProvider as IDisposable)?.Dispose();
+            base.OnExit(e);
         }
 
         private static AppSettings LoadSettings()
@@ -33,5 +49,4 @@ namespace TensileTestingApp
             return config.Get<AppSettings>() ?? new AppSettings();
         }
     }
-
 }

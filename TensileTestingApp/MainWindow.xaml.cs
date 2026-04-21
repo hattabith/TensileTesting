@@ -1,32 +1,18 @@
 ﻿using System.Windows;
-using TensileTestingApp.Configuration;
+using TensileTestingApp.ViewModel;
+using TensileTestingApp.Views;
+
 namespace TensileTestingApp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
-
-        public MainWindow()
-            : this(App.Settings)
+        public MainWindow(MainWindowViewModel viewModel, MainPage mainPage)
         {
-        }
-
-        public MainWindow(AppSettings settings)
-        {
-
             InitializeComponent();
 
-            var vm = new ViewModel.MainWindowViewModel();
-            var page = new Views.MainPage(settings)
-            {
-                DataContext = vm
-            };
-            vm.CurrentPage = page;
-            this.DataContext = vm;
-
-
+            mainPage.DataContext = viewModel;
+            viewModel.CurrentPage = mainPage;
+            this.DataContext = viewModel;
         }
     }
 }

@@ -37,11 +37,6 @@ namespace TensileTestingApp.Views
         private Task? _writerTask;
         private CancellationTokenSource? _writerCts;
 
-        public MainPage()
-            : this(App.Settings)
-        {
-        }
-
         public MainPage(AppSettings settings)
             : this(
                 new SerialPortService(),
