@@ -9,6 +9,7 @@ namespace TensileTestingApp.Configuration
         public LoggingSettings Logging { get; set; } = new();
         public UiSettings Ui { get; set; } = new();
         public FilterSettings Filter { get; set; } = new();
+        public FilterSettings LengthFilter { get; set; } = new();
     }
 
     public class SerialPortSettings
@@ -46,7 +47,7 @@ namespace TensileTestingApp.Configuration
         public string Delimiter { get; set; } = ";";
         public bool AutoFlush { get; set; } = true;
         public int BatchSizePoints { get; set; } = 10;
-        public string Header { get; set; } = "DateTime;RawForce;FilteredForce;Length";
+        public string Header { get; set; } = "DateTime;RawForce;FilteredForce;RawLength;FilteredLength";
         public int FlushIntervalMs { get; set; } = 100;
     }
 

@@ -7,6 +7,9 @@
         public double Force { get; set; }
         /// <summary>Smoothed force value produced by the configured signal filter.</summary>
         public double FilteredForce { get; set; }
+        /// <summary>Raw (unfiltered) length value from the ADC.</summary>
         public double Length { get; set; }
+        /// <summary>Smoothed length value produced by the configured signal filter.</summary>
+        public double FilteredLength { get; set; }
     }
 }

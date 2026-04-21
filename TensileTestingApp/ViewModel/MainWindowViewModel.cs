@@ -14,6 +14,7 @@ namespace TensileTestingApp.ViewModel
         private readonly LineSeries _forceTimeSeries;
         private readonly LineSeries _rawForceTimeSeries;
         private readonly LineSeries _lengthTimeSeries;
+        private readonly LineSeries _rawLengthTimeSeries;
         private readonly LineSeries _forceLengthSeries;
 
 
@@ -61,7 +62,20 @@ namespace TensileTestingApp.ViewModel
             this.LengthPlot = new PlotModel { Title = "Length vs Time" };
             this.LengthPlot.Axes.Add(new DateTimeAxis { Position = AxisPosition.Bottom, Title = "Time", StringFormat = "HH:mm:ss" });
             this.LengthPlot.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Length (mm)" });
-            _lengthTimeSeries = new LineSeries { Title = "Length", Color = OxyColors.DodgerBlue };
+            _rawLengthTimeSeries = new LineSeries
+            {
+                Title = "Raw Length",
+                Color = OxyColor.FromAColor(80, OxyColors.DodgerBlue),
+                StrokeThickness = 1.0,
+                LineStyle = LineStyle.Solid
+            };
+            _lengthTimeSeries = new LineSeries
+            {
+                Title = "Filtered Length",
+                Color = OxyColors.DodgerBlue,
+                StrokeThickness = 2.0
+            };
+            this.LengthPlot.Series.Add(_rawLengthTimeSeries);
             this.LengthPlot.Series.Add(_lengthTimeSeries);
 
             this.ForceLengthPlot = new PlotModel { Title = "Force vs Length" };
@@ -95,6 +109,7 @@ namespace TensileTestingApp.ViewModel
         {
             _rawForceTimeSeries.Points.Clear();
             _forceTimeSeries.Points.Clear();
+            _rawLengthTimeSeries.Points.Clear();
             _lengthTimeSeries.Points.Clear();
             _forceLengthSeries.Points.Clear();
             ForcePlot.InvalidatePlot(true);
@@ -107,8 +122,9 @@ namespace TensileTestingApp.ViewModel
             double timeX = DateTimeAxis.ToDouble(data.Timestamp);
             _rawForceTimeSeries.Points.Add(new DataPoint(timeX, data.Force));
             _forceTimeSeries.Points.Add(new DataPoint(timeX, data.FilteredForce));
-            _lengthTimeSeries.Points.Add(new DataPoint(timeX, data.Length));
-            _forceLengthSeries.Points.Add(new DataPoint(data.Length, data.FilteredForce));
+            _rawLengthTimeSeries.Points.Add(new DataPoint(timeX, data.Length));
+            _lengthTimeSeries.Points.Add(new DataPoint(timeX, data.FilteredLength));
+            _forceLengthSeries.Points.Add(new DataPoint(data.FilteredLength, data.FilteredForce));
 
             ForcePlot.InvalidatePlot(true);
             LengthPlot.InvalidatePlot(true);

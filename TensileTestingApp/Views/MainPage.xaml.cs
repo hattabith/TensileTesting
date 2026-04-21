@@ -24,6 +24,7 @@ namespace TensileTestingApp.Views
         private readonly ILogger _logger;
         private readonly AppSettings _settings;
         private readonly ISignalFilter _forceFilter;
+        private readonly ISignalFilter _lengthFilter;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
@@ -63,12 +64,13 @@ namespace TensileTestingApp.Views
             _dataParser = dataParser;
             _logger = logger;
             _settings = settings;
-            _forceFilter = CreateForceFilter(settings.Filter);
+            _forceFilter = CreateFilter(settings.Filter);
+            _lengthFilter = CreateFilter(settings.LengthFilter);
             InitializeComponent();
             Unloaded += MainPage_Unloaded;
         }
 
-        private static ISignalFilter CreateForceFilter(FilterSettings settings)
+        private static ISignalFilter CreateFilter(FilterSettings settings)
         {
             if (!settings.EnableForceFilter)
                 return new ExponentialMovingAverageFilter(1.0); // alpha=1 → passthrough
@@ -181,6 +183,7 @@ namespace TensileTestingApp.Views
                             : _dataParser.ParseWithoutChecksum(receivedData);
 
                         parsedData.FilteredForce = _forceFilter.Filter(parsedData.Force);
+                        parsedData.FilteredLength = _lengthFilter.Filter(parsedData.Length);
 
                         string line = string.Join(
                             _settings.Recording.Delimiter,
@@ -324,6 +327,7 @@ namespace TensileTestingApp.Views
 
             _testData.Clear();
             _forceFilter.Reset();
+            _lengthFilter.Reset();
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.ResetLiveData();
@@ -461,7 +465,8 @@ namespace TensileTestingApp.Views
                     data.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
                     data.Force.ToString("F3", CultureInfo.InvariantCulture),
                     data.FilteredForce.ToString("F3", CultureInfo.InvariantCulture),
-                    data.Length.ToString("F3", CultureInfo.InvariantCulture));
+                    data.Length.ToString("F3", CultureInfo.InvariantCulture),
+                    data.FilteredLength.ToString("F3", CultureInfo.InvariantCulture));
                 builder.AppendLine(line);
             }
 
