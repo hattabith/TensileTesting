@@ -200,7 +200,7 @@ namespace TensileTestingApp.Views
                             LengthDSeg7.Text = parsedData.Length.ToString(_settings.Ui.LengthDisplayFormat, CultureInfo.InvariantCulture);
                         });
 
-                        if (_resiveState == ReceivingToFileState.Reciveing)
+                        if (_resiveState == ReceivingToFileState.Receiving)
                         {
                             await Dispatcher.InvokeAsync(() => AppendDataPoint(parsedData));
                             await EnqueueForFileWriteAsync(parsedData, token);
@@ -270,7 +270,7 @@ namespace TensileTestingApp.Views
                 case ReceivingToFileState.Stopped:
                     RecordButton.Content = "Start";
                     break;
-                case ReceivingToFileState.Reciveing:
+                case ReceivingToFileState.Receiving:
                     RecordButton.Content = "Stop";
                     break;
             }
@@ -301,7 +301,7 @@ namespace TensileTestingApp.Views
                     await Task.Run(_serialPortService.CloseConnection);
                 }
 
-                if (_resiveState == ReceivingToFileState.Reciveing || _writerTask is not null || _writer is not null)
+                if (_resiveState == ReceivingToFileState.Receiving || _writerTask is not null || _writer is not null)
                 {
                     await StopRecordingAsync();
                 }
@@ -322,7 +322,7 @@ namespace TensileTestingApp.Views
 
         private async Task StartRecordingAsync()
         {
-            _resiveState = ReceivingToFileState.Reciveing;
+            _resiveState = ReceivingToFileState.Receiving;
             UpdateUiState();
 
             _testData.Clear();

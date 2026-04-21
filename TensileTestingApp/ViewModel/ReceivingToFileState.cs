@@ -4,7 +4,7 @@
     {
         public enum ReceivingToFileState
         {
-            Reciveing,
+            Receiving,
             Stopped
         }
 
