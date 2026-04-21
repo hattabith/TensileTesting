@@ -368,6 +368,11 @@ Planning/
 # GitHub folder for issue templates, workflows, and other GitHub-specific files
 .github/
 
+# Agents folder 
+.agents
 
 #.code-workspace
 *.code-workspace
+
+# Skill lock file for AI agents 
+skills-lock.json
