@@ -96,8 +96,11 @@ namespace TensileTestingApp.Views;
             {
                 if (_connectionState == ConnectionState.Disconnected)
                 {
-                    await ConnectAsync();
-                    StartPolling();
+                    bool connected = ConnectAsync();
+                    if (connected)
+                    {
+                        StartPolling();
+                    }
                 }
                 else if (_connectionState == ConnectionState.Connected)
                 {
@@ -109,28 +112,44 @@ namespace TensileTestingApp.Views;
             {
                 OutputTextBox.Text += $"Error: {ex.Message}\n";
                 _logger.LogError("Connection button operation failed", ex);
-                _connectionState = ConnectionState.Error;
+                _connectionState = ConnectionState.Disconnected;
                 UpdateUiState();
+                ShowConnectionErrorDialog(ex);
             }
 
         }
-        private async Task ConnectAsync()
+        private bool ConnectAsync()
         {
             _connectionState = ConnectionState.Connecting;
             UpdateUiState();
 
-            _serialPortService.Configure(
-                COMPortComboBox.SelectedItem?.ToString() ?? _settings.SerialPort.DefaultPortName,
-                (int?)BaudRateComboBox.SelectedItem ?? _settings.SerialPort.DefaultBaudRate,
-                Address485ComboBox.SelectedIndex >= 0 ? Address485ComboBox.SelectedIndex : _settings.SerialPort.DefaultDeviceAddress);
+            try
+            {
+                _serialPortService.Configure(
+                    COMPortComboBox.SelectedItem?.ToString() ?? _settings.SerialPort.DefaultPortName,
+                    (int?)BaudRateComboBox.SelectedItem ?? _settings.SerialPort.DefaultBaudRate,
+                    Address485ComboBox.SelectedIndex >= 0 ? Address485ComboBox.SelectedIndex : _settings.SerialPort.DefaultDeviceAddress);
 
-            await Task.Run(_serialPortService.OpenConnection);
+                _serialPortService.OpenConnection();
+            }
+            catch (Exception ex)
+            {
+                try { if (_serialPortService.IsOpen) _serialPortService.CloseConnection(); } catch { }
 
+                _connectionState = ConnectionState.Disconnected;
+                UpdateUiState();
+                OutputTextBox.Text += $"Connection error: {GetConnectionErrorMessage(ex)}\n";
+                _logger.LogError("Failed to connect to serial port", ex);
+
+                ShowConnectionErrorDialog(ex);
+                return false;
+            }
 
             _connectionState = ConnectionState.Connected;
             _logger.LogInfo($"Connected to {_serialPortService.PortName} with baud {_serialPortService.BaudRate}");
             UpdateUiState();
 
+            return true;
         }
         private async Task DisconnectAsync()
         {
@@ -152,6 +171,32 @@ namespace TensileTestingApp.Views;
             _pollCts = new CancellationTokenSource();
             _pollTask = Task.Run(() => PollLoop(_pollCts.Token));
         }
+
+        private void ShowConnectionErrorDialog(Exception ex)
+        {
+            string selectedPort = COMPortComboBox.SelectedItem?.ToString() ?? _settings.SerialPort.DefaultPortName;
+            string message = $"Не вдалося відкрити COM-порт '{selectedPort}'.\n\n{GetConnectionErrorMessage(ex)}\n\nВиберіть інший порт та спробуйте ще раз.";
+
+            System.Windows.MessageBox.Show(
+                message,
+                "Помилка підключення",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Warning);
+        }
+
+        private static string GetConnectionErrorMessage(Exception ex)
+        {
+            Exception rootCause = ex.InnerException ?? ex;
+
+            return rootCause switch
+            {
+                UnauthorizedAccessException => "Порт зайнятий іншим застосунком або немає прав доступу.",
+                IOException => "Порт не існує або зараз недоступний.",
+                ArgumentException => "Вибрано некоректний COM-порт.",
+                _ => rootCause.Message
+            };
+        }
+
         private async Task PollLoop(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
