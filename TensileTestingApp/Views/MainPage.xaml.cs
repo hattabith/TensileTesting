@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows.Controls;
 using TensileTestingApp.Configuration;
@@ -351,6 +352,17 @@ namespace TensileTestingApp.Views;
             _writer = new StreamWriter(filePath, true, encoding);
             await _writer.WriteLineAsync(_settings.Recording.Header);
             await _writer.FlushAsync();
+
+            // Write specimen parameters to companion JSON file
+            var specimenParams = new SpecimenParameters(
+                Name: FileNameTextBox.Text,
+                Type: SpecimenTypeComboBox.SelectedItem?.ToString() ?? "Unknown",
+                DiameterMm: double.TryParse(DiameterTextBox.Text, out var d) ? d : 0,
+                GaugeLengthMm: double.TryParse(GaugeLengthTextBox.Text, out var l) ? l : 0,
+                RecordedAt: DateTime.Now
+            );
+            string metaPath = Path.Combine(baseDir, $"{experimentName}_meta.json");
+            await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(specimenParams, new JsonSerializerOptions { WriteIndented = true }));
 
             _writerCts = new CancellationTokenSource();
             _writeChannel = Channel.CreateUnbounded<TensileTestData>(new UnboundedChannelOptions

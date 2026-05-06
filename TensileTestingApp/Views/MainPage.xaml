@@ -49,9 +49,9 @@
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="Diameter" Margin="10 10 0 10" />
-                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen diameter in mm"></TextBox>
+                <TextBox Name="DiameterTextBox" Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen diameter in mm"></TextBox>
                 <Label Content="Height" Margin="10 10 0 10" />
-                <TextBox Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen height in mm"></TextBox>
+                <TextBox Name="GaugeLengthTextBox" Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen height in mm"></TextBox>
             </StackPanel>
         </StackPanel>
 
