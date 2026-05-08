@@ -44,7 +44,18 @@
                 <TextBox Text="" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter specimen name or experiment name"></TextBox>
                 <Label Content="Type" Margin="10 10 0 10" />
                 <ComboBox Name="SpecimenTypeComboBox" ItemsSource="{Binding Path=SpecimenTypeValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0"
-                          ToolTip="Type of spiceman. Under construction. Today only &quot;Cylindrscal&quot; working... "/>
+                          ToolTip="Type of spiceman. Under construction. Today only &quot;Cylindrscal&quot; working... ">
+                    <ComboBox.ItemContainerStyle>
+                        <Style TargetType="ComboBoxItem">
+                            <Setter Property="IsEnabled" Value="False" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.Cylindrical}">
+                                    <Setter Property="IsEnabled" Value="True" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ComboBox.ItemContainerStyle>
+                </ComboBox>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">

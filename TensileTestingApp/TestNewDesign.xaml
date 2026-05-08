@@ -1,0 +1,261 @@
+﻿
+<Window x:Class="TensileTestingApp.TestNewDesign"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="TensilePro - Dark Analytics" Height="800" Width="1280"
+        Background="#121619"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <SolidColorBrush x:Key="PanelBackground" Color="#1E2328" Opacity="0.85"/>
+        <SolidColorBrush x:Key="PanelBorder" Color="#8B5A2B"/>
+        <SolidColorBrush x:Key="AccentCyan" Color="#00D2FF"/>
+        <SolidColorBrush x:Key="TextMain" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="TerminalGreen" Color="#00FF41"/>
+
+        <Style x:Key="SteampunkPanel" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource PanelBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PanelBorder}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="10"/>
+            <Setter Property="Padding" Value="15"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="5" Opacity="0.5"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="HeaderLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource TextMain}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+
+        <Style x:Key="DigitalIndicator" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AccentCyan}"/>
+            <Setter Property="FontFamily" Value="Consolas"/>
+            <Setter Property="FontSize" Value="48"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="#00D2FF" BlurRadius="15" ShadowDepth="0"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="StartButtonStyle" TargetType="Button">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#0A1A24" 
+                                BorderBrush="{StaticResource AccentCyan}" 
+                                BorderThickness="3" 
+                                CornerRadius="50">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#00D2FF" BlurRadius="25" ShadowDepth="0"/>
+                            </Border.Effect>
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="20,10"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="180"/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="380"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.Column="0">
+            <Border Style="{StaticResource SteampunkPanel}">
+                <StackPanel>
+                    <TextBlock Text="ІНІЦІАЛІЗАЦІЯ ІНТЕРФЕЙСУ" Style="{StaticResource HeaderLabel}"/>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="5">
+                            <TextBlock Text="COM Port" Foreground="Gray" HorizontalAlignment="Center"/>
+                            <ComboBox SelectedIndex="0" Margin="0,5,0,0">
+                                <ComboBoxItem Content="COM 3"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="5">
+                            <TextBlock Text="Baud Rate" Foreground="Gray" HorizontalAlignment="Center"/>
+                            <ComboBox SelectedIndex="5" Margin="0,5,0,0">
+                                <ComboBoxItem Content="115200"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <Button Grid.Column="2" Content="ВСТАНОВИТИ&#x0a;ЗВ'ЯЗОК" Width="100" Margin="10,0,0,0" 
+                                Background="#1A3320" Foreground="Lime" BorderBrush="Lime"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource SteampunkPanel}" MinHeight="250">
+                <StackPanel>
+                    <TextBlock Text="КОНФІГУРАЦІЯ ЗРАЗКА" Style="{StaticResource HeaderLabel}"/>
+
+                    <TextBlock Text="Матеріал дослідження" Foreground="Gray" Margin="0,5,0,2"/>
+                    <TextBox Text="Сталь конструкційна" Background="#121619" Foreground="White" BorderBrush="{StaticResource PanelBorder}" Padding="5"/>
+
+                    <Grid Margin="0,15,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="2">
+                            <TextBlock Text="Ширина (мм)" Foreground="Gray" FontSize="10" HorizontalAlignment="Center"/>
+                            <TextBox Text="10" Background="#121619" Foreground="White" TextAlignment="Center" Padding="5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Margin="2">
+                            <TextBlock Text="Товщина (мм)" Foreground="Gray" FontSize="10" HorizontalAlignment="Center"/>
+                            <TextBox Text="2" Background="#121619" Foreground="White" TextAlignment="Center" Padding="5"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Margin="2">
+                            <TextBlock Text="Площа (мм²)" Foreground="Gray" FontSize="10" HorizontalAlignment="Center"/>
+                            <TextBox Text="20.0" Background="#121619" Foreground="White" TextAlignment="Center" Padding="5" IsReadOnly="True"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Text="Базова довжина (L0, мм)" Foreground="Gray" Margin="0,15,0,2" HorizontalAlignment="Center"/>
+                    <TextBox Text="100" Background="#121619" Foreground="White" TextAlignment="Center" Padding="5" Width="150"/>
+
+                    <TextBlock Text="Export Filename" Foreground="Gray" Margin="0,15,0,2"/>
+                    <TextBox Text="Test01_Steel10x2_M5" Background="#121619" Foreground="White" Padding="5"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <Grid Grid.Row="0" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Style="{StaticResource SteampunkPanel}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                        <TextBlock Text="ПОТОЧНЕ ЗУСИЛЛЯ (Force)" Foreground="Gray" HorizontalAlignment="Center"/>
+                        <TextBlock Text="1425.8 H" Style="{StaticResource DigitalIndicator}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                        <TextBlock Text="ПЕРЕМІЩЕННЯ ТРАВЕРСИ (Length)" Foreground="Gray" HorizontalAlignment="Center"/>
+                        <TextBlock Text="3.75 мм" Style="{StaticResource DigitalIndicator}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="1" Style="{StaticResource SteampunkPanel}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="ГРАФІКИ В РЕАЛЬНОМУ ЧАСІ" Style="{StaticResource HeaderLabel}"/>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" BorderBrush="#333" BorderThickness="1" Margin="5" Background="#0A0E12">
+                            <TextBlock Text="Графік: Сила від Часу" Foreground="{StaticResource AccentCyan}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <Border Grid.Column="1" BorderBrush="#333" BorderThickness="1" Margin="5" Background="#0A0E12">
+                            <TextBlock Text="Графік: Переміщення від Часу" Foreground="{StaticResource AccentCyan}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+
+                        <Border Grid.Column="2" BorderBrush="#333" BorderThickness="1" Margin="5" Background="#0A0E12">
+                            <TextBlock Text="Графік: Сила/Переміщення" Foreground="{StaticResource AccentCyan}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource SteampunkPanel}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="ДАНІ COM-ПОРТУ" Style="{StaticResource HeaderLabel}" HorizontalAlignment="Left"/>
+
+                    <ScrollViewer Grid.Row="1" Background="#050A05" Padding="10">
+                        <TextBlock Foreground="{StaticResource TerminalGreen}" FontFamily="Consolas" FontSize="14" TextWrapping="Wrap">
+                            <Run Text="[11:35:48] Ініціалізація інтерфейсу. Очікування з'єднання COM3."/><LineBreak/>
+                            <Run Text="[11:35:49] COM3 (USB) відкрито успішно: 115200 бод."/><LineBreak/>
+                            <Run Text="[11:35:50] Адреса пристрою 0x03 підтверджена."/><LineBreak/>
+                            <Run Text="[11:35:52] Калібрування датчика завершено. Встановлено нульовий зсув."/><LineBreak/>
+                            <Run Text="[11:35:54] Завантажено конфігурацію: Сталь_констр_М5."/><LineBreak/>
+                            <Run Text="[11:35:55] Система готова. Очікування запуску..." Foreground="White"/>
+                        </TextBlock>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource SteampunkPanel}" BorderBrush="Transparent" Background="Transparent" Width="350">
+                <Button Content="START&#x0a;EXPERIMENT" Style="{StaticResource StartButtonStyle}" VerticalAlignment="Center" HorizontalAlignment="Center" Width="250" Height="100"/>
+            </Border>
+        </Grid>
+
+        <StatusBar Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#1E2328" Foreground="{StaticResource TextMain}">
+            <StatusBarItem>
+                <TextBlock Text="ДАТА: 07 ТРА 2026 | ЧАС: 12:24:35" FontWeight="Bold"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+            <StatusBarItem>
+                <TextBlock Text="ОПЕРАТОР: TECH_A01"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+            <StatusBarItem>
+                <TextBlock Text="СТАТУС: СИСТЕМА ГОТОВА" Foreground="Lime" FontWeight="Bold"/>
+            </StatusBarItem>
+            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}"/>
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock Text="COM3: ON" Foreground="Lime"/>
+            </StatusBarItem>
+        </StatusBar>
+
+    </Grid>
+</Window>
