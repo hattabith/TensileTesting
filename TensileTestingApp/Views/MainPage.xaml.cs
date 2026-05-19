@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows.Controls;
+using System.Windows;
 using System.Windows.Media;
 using TensileTestingApp.Configuration;
 using TensileTestingApp.Models;
@@ -71,6 +72,8 @@ namespace TensileTestingApp.Views;
             _zeroCorrectionService = zeroCorrectionService;
             _preloadService = preloadService;
             InitializeComponent();
+            PreloadThresholdTextBox.Text = _preloadService.Threshold.ToString("F2", CultureInfo.InvariantCulture);
+            PreloadModeComboBox.SelectedIndex = _preloadService.Mode == PreloadMode.OffsetSubtraction ? 0 : 1;
             Unloaded += MainPage_Unloaded;
         }
 
@@ -143,7 +146,17 @@ namespace TensileTestingApp.Views;
             }
             catch (Exception ex)
             {
-                try { if (_serialPortService.IsOpen) _serialPortService.CloseConnection(); } catch { }
+                try
+                {
+                    if (_serialPortService.IsOpen)
+                    {
+                        _serialPortService.CloseConnection();
+                    }
+                }
+                catch (Exception closeEx)
+                {
+                    _logger.LogError("Failed to close serial port after connection failure", closeEx);
+                }
 
                 _connectionState = ConnectionState.Disconnected;
                 UpdateUiState();
@@ -166,6 +179,11 @@ namespace TensileTestingApp.Views;
             UpdateUiState();
 
             await Task.Run(_serialPortService.CloseConnection);
+
+            if (_settings.ZeroCorrection.ClearOnDisconnect)
+            {
+                _zeroCorrectionService.Clear();
+            }
 
             _connectionState = ConnectionState.Disconnected;
             _logger.LogInfo("Disconnected from serial port");
@@ -245,6 +263,8 @@ namespace TensileTestingApp.Views;
 
                         parsedData.PreloadAdjustedForce = _preloadService.ApplyForce(parsedData.CorrectedForce);
                         parsedData.PreloadAdjustedLength = _preloadService.ApplyLength(parsedData.CorrectedLength);
+                        parsedData.IsZeroApplied = _zeroCorrectionService.State == ZeroCorrectionState.Ready;
+                        parsedData.IsPreloadApplied = _preloadService.State == PreloadState.ThresholdReached;
 
                         string line = string.Join(
                             _settings.Recording.Delimiter,
@@ -583,9 +603,31 @@ namespace TensileTestingApp.Views;
                 : PreloadMode.OriginShift;
         }
 
+        private void PreloadThresholdTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (!double.TryParse(PreloadThresholdTextBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedThreshold) || parsedThreshold < 0)
+            {
+                PreloadThresholdTextBox.Text = _preloadService.Threshold.ToString("F2", CultureInfo.InvariantCulture);
+                return;
+            }
+
+            _preloadService.Threshold = parsedThreshold;
+            _preloadService.Reset();
+            UpdateCalibrationStatusDisplay();
+        }
+
         private void UpdateCalibrationStatusDisplay()
         {
             // Must be called on the UI thread.
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.ZeroOffsetText = $"F={_zeroCorrectionService.ForceOffset:F3}; L={_zeroCorrectionService.LengthOffset:F3}";
+                vm.CalibrationQuality = _zeroCorrectionService.Quality.ToString();
+                vm.PreloadStatusText = _preloadService.State == PreloadState.ThresholdReached
+                    ? $"Locked @ {_preloadService.CapturedForceValue:F2} kN"
+                    : "Waiting";
+            }
+
             switch (_zeroCorrectionService.State)
             {
                 case ZeroCorrectionState.Capturing:

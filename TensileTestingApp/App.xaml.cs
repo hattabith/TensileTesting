@@ -41,7 +41,7 @@ namespace TensileTestingApp;
                 var ex = e.ExceptionObject as Exception;
                 LogCrash("DomainUnhandled", ex);
 
-                Dispatcher.Invoke(() =>
+                Dispatcher.InvokeAsync(() =>
                     ShowErrorDialog(
                         "Fatal Error",
                         "A fatal error occurred. The application will now close.",
@@ -130,7 +130,10 @@ namespace TensileTestingApp;
                 var msg = $"\n[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] [{source}]\n{ex}\n";
                 File.AppendAllText(CrashLogPath, msg);
             }
-            catch { }
+            catch (Exception logEx)
+            {
+                Debug.WriteLine($"[CRASH-LOG-FAIL:{source}] {logEx.Message}");
+            }
 
             Debug.WriteLine($"[CRASH:{source}] {ex?.Message}");
         }

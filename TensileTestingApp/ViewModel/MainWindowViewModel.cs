@@ -9,6 +9,9 @@ namespace TensileTestingApp.ViewModel;
     public partial class MainWindowViewModel : ViewModelBase
     {
         private Frame _mainWindowFrame;
+        private string _zeroOffsetText = "-";
+        private string _preloadStatusText = "Waiting";
+        private string _calibrationQuality = "Unknown";
         private readonly LineSeries _forceTimeSeries;
         private readonly LineSeries _rawForceTimeSeries;
         private readonly LineSeries _lengthTimeSeries;
@@ -22,6 +25,24 @@ namespace TensileTestingApp.ViewModel;
             set => SetProperty(ref _mainWindowFrame, value);
         }
         public Page CurrentPage { get; set; }
+
+        public string ZeroOffsetText
+        {
+            get => _zeroOffsetText;
+            set => SetProperty(ref _zeroOffsetText, value);
+        }
+
+        public string PreloadStatusText
+        {
+            get => _preloadStatusText;
+            set => SetProperty(ref _preloadStatusText, value);
+        }
+
+        public string CalibrationQuality
+        {
+            get => _calibrationQuality;
+            set => SetProperty(ref _calibrationQuality, value);
+        }
 
         public MainWindowViewModel()
         {

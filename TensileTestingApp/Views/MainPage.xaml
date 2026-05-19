@@ -141,7 +141,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0 3 0 2">
                         <TextBlock Text="Threshold:" Width="60" VerticalAlignment="Center" FontSize="11"/>
-                        <TextBox Name="PreloadThresholdTextBox" Text="0.5" Width="50" Height="22"
+                        <TextBox Name="PreloadThresholdTextBox" Text="0.5" Width="50" Height="22" LostFocus="PreloadThresholdTextBox_LostFocus"
                                  ToolTip="Preload threshold in kN"/>
                         <TextBlock Text="kN" Margin="4 0 10 0" VerticalAlignment="Center" FontSize="11"/>
                         <TextBlock Name="PreloadStatusText" Text="Waiting" Foreground="Gray"

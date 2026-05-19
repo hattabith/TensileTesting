@@ -6,6 +6,7 @@ namespace TensileTestingApp.Services.Implementations;
 public sealed class PreloadService : IPreloadService
 {
     private readonly object _lock = new();
+    private readonly double _hysteresis;
     private PreloadState _state = PreloadState.Waiting;
     private double _capturedForceValue;
     private double _capturedLengthValue;
@@ -23,6 +24,7 @@ public sealed class PreloadService : IPreloadService
             ? PreloadMode.OriginShift
             : PreloadMode.OffsetSubtraction;
         Threshold = settings.ThresholdKn;
+        _hysteresis = Math.Max(0.0, settings.HysteresisKn);
     }
 
     public void Reset()
@@ -39,14 +41,21 @@ public sealed class PreloadService : IPreloadService
     {
         lock (_lock)
         {
-            if (_state == PreloadState.ThresholdReached)
-                return;
+            double releaseThreshold = Threshold - _hysteresis;
 
-            if (correctedForce >= Threshold)
+            if (_state == PreloadState.Waiting && correctedForce >= Threshold)
             {
                 _capturedForceValue = correctedForce;
                 _capturedLengthValue = correctedLength;
                 _state = PreloadState.ThresholdReached;
+                return;
+            }
+
+            if (_state == PreloadState.ThresholdReached && correctedForce <= releaseThreshold)
+            {
+                _state = PreloadState.Waiting;
+                _capturedForceValue = 0.0;
+                _capturedLengthValue = 0.0;
             }
         }
     }

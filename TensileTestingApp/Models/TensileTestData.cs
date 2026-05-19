@@ -18,4 +18,8 @@
         public double PreloadAdjustedForce { get; set; }
         /// <summary>Length value after preload adjustment (mode-dependent).</summary>
         public double PreloadAdjustedLength { get; set; }
+        /// <summary>True when zero correction baseline is established and applied to the sample.</summary>
+        public bool IsZeroApplied { get; set; }
+        /// <summary>True when preload threshold was reached and preload adjustment is active.</summary>
+        public bool IsPreloadApplied { get; set; }
     }
