@@ -5,22 +5,18 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Controls;
-using System.IO;
 using Microsoft.Win32;
 using TensileTestingApp.Services;
-using TensileTestingApp.Services.Implementations;
-using TensileTestingApp.Configuration;
 using TensileTestingApp.ViewModel;
 
 public partial class ResultsDialog : Window
 {
-    private readonly PdfExportService? _pdfExportService;
+    private readonly PdfExportService _pdfExportService;
 
-    public ResultsDialog()
+    public ResultsDialog(PdfExportService pdfExportService)
     {
         InitializeComponent();
-        _pdfExportService = new PdfExportService(new AppLogger(
-            new Configuration.LoggingSettings()));
+        _pdfExportService = pdfExportService;
         Loaded += ResultsDialog_Loaded;
         SaveButton.Click += SaveButton_Click;
         CloseButton.Click += CloseButton_Click;
@@ -76,7 +72,7 @@ public partial class ResultsDialog : Window
 
     private void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is not ResultsDialogViewModel vm || _pdfExportService == null)
+        if (DataContext is not ResultsDialogViewModel vm)
         {
             MessageBox.Show("No data to save.", "Error");
             return;

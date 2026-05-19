@@ -50,6 +50,31 @@ namespace TensileTestingApp.Services.Implementations;
             }
         }
 
+        public async Task OpenConnectionAsync(CancellationToken cancellationToken = default)
+        {
+            if (_port.IsOpen)
+            {
+                return;
+            }
+
+            try
+            {
+                await Task.Run(() =>
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    _port.Open();
+                }, cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Failed to open serial port.", ex);
+            }
+        }
+
         public void CloseConnection()
         {
             if (!_port.IsOpen)

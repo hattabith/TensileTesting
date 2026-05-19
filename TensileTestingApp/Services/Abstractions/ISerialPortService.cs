@@ -10,6 +10,7 @@ namespace TensileTestingApp.Services.Abstractions;
         List<string> GetAvailablePorts();
         List<int> GetSupportedBaudRates();
         void OpenConnection();
+        Task OpenConnectionAsync(CancellationToken cancellationToken = default);
         void CloseConnection();
         void WriteToPort(string command, int timeout);
         void WriteToPort(string command);

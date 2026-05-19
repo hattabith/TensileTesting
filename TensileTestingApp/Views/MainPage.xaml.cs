@@ -20,10 +20,12 @@ namespace TensileTestingApp.Views;
     /// </summary>
     public partial class MainPage : Page
     {
+        private static readonly TimeSpan ConnectTimeout = TimeSpan.FromSeconds(8);
         private readonly ISerialPortService _serialPortService;
         private readonly IDconProtocolService _dconProtocolService;
         private readonly IDataParser _dataParser;
         private readonly ILogger _logger;
+        private readonly Services.PdfExportService _pdfExportService;
         private readonly AppSettings _settings;
         private readonly ISignalFilter _forceFilter;
         private readonly ISignalFilter _lengthFilter;
@@ -44,7 +46,7 @@ namespace TensileTestingApp.Views;
         private const double BreakDropRatio = 0.30;
         private System.Windows.Threading.DispatcherTimer? _comPortRefreshTimer;
 
-        public MainPage(AppSettings settings, IZeroCorrectionService zeroCorrectionService, IPreloadService preloadService)
+        public MainPage(AppSettings settings, IZeroCorrectionService zeroCorrectionService, IPreloadService preloadService, Services.PdfExportService pdfExportService)
             : this(
                 new SerialPortService(),
                 new DconProtocolService(),
@@ -52,7 +54,8 @@ namespace TensileTestingApp.Views;
                 new AppLogger(settings.Logging),
                 settings,
                 zeroCorrectionService,
-                preloadService)
+            preloadService,
+            pdfExportService)
         {
         }
 
@@ -63,12 +66,14 @@ namespace TensileTestingApp.Views;
             ILogger logger,
             AppSettings settings,
             IZeroCorrectionService zeroCorrectionService,
-            IPreloadService preloadService)
+            IPreloadService preloadService,
+            Services.PdfExportService pdfExportService)
         {
             _serialPortService = serialPortService;
             _dconProtocolService = dconProtocolService;
             _dataParser = dataParser;
             _logger = logger;
+            _pdfExportService = pdfExportService;
             _settings = settings;
             _forceFilter = CreateFilter(settings.Filter);
             _lengthFilter = CreateFilter(settings.LengthFilter);
@@ -96,25 +101,40 @@ namespace TensileTestingApp.Views;
 
         private void MainPage_Loaded(object sender, System.Windows.RoutedEventArgs e)
         {
+            if (_comPortRefreshTimer != null)
+            {
+                return;
+            }
+
             _comPortRefreshTimer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromSeconds(2)
             };
-            _comPortRefreshTimer.Tick += (s, e) =>
+            _comPortRefreshTimer.Tick += ComPortRefreshTimer_Tick;
+            if (DataContext is MainWindowViewModel vm)
             {
-                if (DataContext is MainWindowViewModel vm)
-                {
-                    vm.UpdatePortList();
-                }
-            };
+                vm.UpdatePortList();
+            }
             _comPortRefreshTimer.Start();
         }
 
         private async void MainPage_Unloaded(object sender, System.Windows.RoutedEventArgs e)
         {
-            _comPortRefreshTimer?.Stop();
-            _comPortRefreshTimer = null;
+            if (_comPortRefreshTimer != null)
+            {
+                _comPortRefreshTimer.Stop();
+                _comPortRefreshTimer.Tick -= ComPortRefreshTimer_Tick;
+                _comPortRefreshTimer = null;
+            }
             await CleanupResourcesAsync();
+        }
+
+        private void ComPortRefreshTimer_Tick(object? sender, EventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.UpdatePortList();
+            }
         }
 
         private async void ConnectButton_Click(object sender, System.Windows.RoutedEventArgs e)
@@ -130,7 +150,7 @@ namespace TensileTestingApp.Views;
             {
                 if (_connectionState == ConnectionState.Disconnected)
                 {
-                    bool connected = ConnectAsync();
+                    bool connected = await ConnectAsync();
                     if (connected)
                     {
                         StartPolling();
@@ -152,7 +172,7 @@ namespace TensileTestingApp.Views;
             }
 
         }
-        private bool ConnectAsync()
+        private async Task<bool> ConnectAsync()
         {
             _connectionState = ConnectionState.Connecting;
             UpdateUiState();
@@ -164,7 +184,17 @@ namespace TensileTestingApp.Views;
                     (int?)BaudRateComboBox.SelectedItem ?? _settings.SerialPort.DefaultBaudRate,
                     Address485ComboBox.SelectedIndex >= 0 ? Address485ComboBox.SelectedIndex : _settings.SerialPort.DefaultDeviceAddress);
 
-                _serialPortService.OpenConnection();
+                using CancellationTokenSource connectTimeoutCts = new(ConnectTimeout);
+                await _serialPortService.OpenConnectionAsync(connectTimeoutCts.Token);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _connectionState = ConnectionState.Disconnected;
+                UpdateUiState();
+                OutputTextBox.Text += $"Connection error: Connection timed out after {ConnectTimeout.TotalSeconds:F0} seconds.\n";
+                _logger.LogError("Connection timed out while opening serial port", ex);
+                ShowConnectionErrorDialog(new TimeoutException($"Connection timed out after {ConnectTimeout.TotalSeconds:F0} seconds.", ex));
+                return false;
             }
             catch (Exception ex)
             {
@@ -620,7 +650,7 @@ namespace TensileTestingApp.Views;
                 vm.DataPoints.Add((dataPoint.PreloadAdjustedLength != 0 ? dataPoint.PreloadAdjustedLength : dataPoint.CorrectedLength, dataPoint.PreloadAdjustedForce != 0 ? dataPoint.PreloadAdjustedForce : dataPoint.CorrectedForce));
             }
 
-            var dlg = new ResultsDialog { DataContext = vm, Owner = Window.GetWindow(this) };
+            var dlg = new ResultsDialog(_pdfExportService) { DataContext = vm, Owner = Window.GetWindow(this) };
             dlg.ShowDialog();
         }
 
