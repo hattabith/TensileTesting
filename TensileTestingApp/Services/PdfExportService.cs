@@ -26,7 +26,8 @@ public class PdfExportService
         double ultimateStrength,
         List<(double Length, double Force)> dataPoints,
         string? testName = null,
-        string? specimenType = null)
+        string? specimenType = null,
+        byte[]? chartImageData = null)
     {
         try
         {
@@ -100,7 +101,15 @@ public class PdfExportService
                             col.Item().PaddingBottom(12);
                             col.Item().Text("Force vs Length Chart").FontSize(12).Bold().FontColor("#2F4F4F");
                             col.Item().PaddingBottom(8);
-                            RenderForceVsLengthChart(col, dataPoints);
+
+                            if (chartImageData is { Length: > 0 })
+                            {
+                                col.Item().Image(chartImageData).FitWidth();
+                            }
+                            else
+                            {
+                                col.Item().Text("Chart image unavailable").FontSize(10).FontColor("#808080");
+                            }
                         }
 
                         col.Item().PaddingBottom(8);
@@ -120,86 +129,4 @@ public class PdfExportService
         }
     }
 
-    private static void RenderForceVsLengthChart(ColumnDescriptor col, List<(double Length, double Force)> dataPoints)
-    {
-        if (dataPoints.Count < 2)
-        {
-            col.Item().Text("Insufficient data for chart").FontSize(10).FontColor("#808080");
-            return;
-        }
-
-        double minX = dataPoints.Min(p => p.Length);
-        double maxX = dataPoints.Max(p => p.Length);
-        double minY = dataPoints.Min(p => p.Force);
-        double maxY = dataPoints.Max(p => p.Force);
-
-        // Prevent division by zero
-        if (Math.Abs(maxX - minX) < 0.0001 || Math.Abs(maxY - minY) < 0.0001)
-        {
-            col.Item().Text("Insufficient data range for chart").FontSize(10).FontColor("#808080");
-            return;
-        }
-
-        // Create ASCII chart representation
-        const int chartWidth = 80;
-        const int chartHeight = 20;
-        char[,] chart = new char[chartHeight, chartWidth];
-
-        // Initialize chart with spaces
-        for (int y = 0; y < chartHeight; y++)
-        {
-            for (int x = 0; x < chartWidth; x++)
-            {
-                chart[y, x] = ' ';
-            }
-        }
-
-        // Draw axes
-        for (int y = 0; y < chartHeight - 1; y++)
-        {
-            chart[y, 0] = '|';
-        }
-        for (int x = 0; x < chartWidth; x++)
-        {
-            chart[chartHeight - 1, x] = '-';
-        }
-        chart[chartHeight - 1, 0] = '+';
-
-        // Plot data points
-        foreach (var point in dataPoints)
-        {
-            int x = (int)((point.Length - minX) / (maxX - minX) * (chartWidth - 2)) + 1;
-            int y = (int)((maxY - point.Force) / (maxY - minY) * (chartHeight - 2));
-
-            if (x >= 1 && x < chartWidth && y >= 0 && y < chartHeight - 1)
-            {
-                chart[y, x] = '*';
-            }
-        }
-
-        // Convert chart to string
-        var chartLines = new List<string>();
-        for (int y = 0; y < chartHeight; y++)
-        {
-            var line = "";
-            for (int x = 0; x < chartWidth; x++)
-            {
-                line += chart[y, x];
-            }
-            chartLines.Add(line.TrimEnd());
-        }
-
-        // Add chart to PDF as monospace text
-        col.Item().Text(string.Join("\n", chartLines))
-            .FontSize(8)
-            .FontColor("#000000")
-            .FontFamily("Courier New");
-
-        // Add axis labels
-        col.Item().Row(row =>
-        {
-            row.RelativeItem().Text($"Length: {minX:F2} mm → {maxX:F2} mm").FontSize(9);
-            row.RelativeItem().Text($"Force: {minY:F2} kN → {maxY:F2} kN").FontSize(9);
-        });
-    }
 }

@@ -1,8 +1,11 @@
 namespace TensileTestingApp.Views;
 
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -35,38 +38,12 @@ public partial class ResultsDialog : Window
 
     private void RenderPlot(ResultsDialogViewModel vm)
     {
-        // Simple polyline plot (Force vs Length)
         var host = PlotViewHost;
         host.Content = null;
-        if (vm.DataPoints.Count < 2) return;
+        Canvas? canvas = CreatePlotCanvas(vm.DataPoints, 320, 220, 32);
+        if (canvas is null)
+            return;
 
-        double minX = vm.DataPoints.Min(p => p.Length);
-        double maxX = vm.DataPoints.Max(p => p.Length);
-        double minY = vm.DataPoints.Min(p => p.Force);
-        double maxY = vm.DataPoints.Max(p => p.Force);
-        double w = 320, h = 220, pad = 32;
-
-        var canvas = new Canvas { Width = w, Height = h, Background = Brushes.White };
-        Polyline line = new() { Stroke = Brushes.SteelBlue, StrokeThickness = 2 };
-        foreach (var pt in vm.DataPoints)
-        {
-            double x = pad + (pt.Length - minX) / (maxX - minX) * (w - 2 * pad);
-            double y = h - pad - (pt.Force - minY) / (maxY - minY) * (h - 2 * pad);
-            line.Points.Add(new System.Windows.Point(x, y));
-        }
-        canvas.Children.Add(line);
-        // Axes
-        var xAxis = new Line { X1 = pad, Y1 = h - pad, X2 = w - pad, Y2 = h - pad, Stroke = Brushes.Black };
-        var yAxis = new Line { X1 = pad, Y1 = h - pad, X2 = pad, Y2 = pad, Stroke = Brushes.Black };
-        canvas.Children.Add(xAxis);
-        canvas.Children.Add(yAxis);
-        // Labels
-        var xLabel = new TextBlock { Text = "Length, mm", FontSize = 12 };
-        Canvas.SetLeft(xLabel, w / 2 - 30); Canvas.SetTop(xLabel, h - pad + 8);
-        canvas.Children.Add(xLabel);
-        var yLabel = new TextBlock { Text = "Force, N", FontSize = 12 };
-        Canvas.SetLeft(yLabel, 2); Canvas.SetTop(yLabel, pad - 18);
-        canvas.Children.Add(yLabel);
         host.Content = canvas;
     }
 
@@ -90,6 +67,8 @@ public partial class ResultsDialog : Window
             try
             {
                 var dataPoints = vm.DataPoints.ToList();
+                byte[]? chartImageData = RenderPlotImageBytes(dataPoints, 1400, 800);
+
                 _pdfExportService.ExportTestResultsToPdf(
                     saveDialog.FileName,
                     vm.ElasticModulus,
@@ -97,7 +76,8 @@ public partial class ResultsDialog : Window
                     vm.UltimateStrength,
                     dataPoints,
                     "Test Results",
-                    "Cylindrical");
+                    "Cylindrical",
+                    chartImageData);
 
                 MessageBox.Show($"PDF saved successfully to:\n{saveDialog.FileName}", "Success");
             }
@@ -112,5 +92,69 @@ public partial class ResultsDialog : Window
     {
         DialogResult = true;
         Close();
+    }
+
+    private static Canvas? CreatePlotCanvas(IReadOnlyList<(double Length, double Force)> dataPoints, double width, double height, double padding)
+    {
+        if (dataPoints.Count < 2)
+            return null;
+
+        double minX = dataPoints.Min(p => p.Length);
+        double maxX = dataPoints.Max(p => p.Length);
+        double minY = dataPoints.Min(p => p.Force);
+        double maxY = dataPoints.Max(p => p.Force);
+
+        if (Math.Abs(maxX - minX) < 0.0001 || Math.Abs(maxY - minY) < 0.0001)
+            return null;
+
+        Canvas canvas = new() { Width = width, Height = height, Background = Brushes.White };
+        Polyline line = new() { Stroke = Brushes.SteelBlue, StrokeThickness = 2 };
+
+        foreach ((double length, double force) in dataPoints)
+        {
+            double x = padding + (length - minX) / (maxX - minX) * (width - 2 * padding);
+            double y = height - padding - (force - minY) / (maxY - minY) * (height - 2 * padding);
+            line.Points.Add(new System.Windows.Point(x, y));
+        }
+
+        canvas.Children.Add(line);
+
+        Line xAxis = new() { X1 = padding, Y1 = height - padding, X2 = width - padding, Y2 = height - padding, Stroke = Brushes.Black };
+        Line yAxis = new() { X1 = padding, Y1 = height - padding, X2 = padding, Y2 = padding, Stroke = Brushes.Black };
+        canvas.Children.Add(xAxis);
+        canvas.Children.Add(yAxis);
+
+        TextBlock xLabel = new() { Text = "Length, mm", FontSize = 12 };
+        Canvas.SetLeft(xLabel, width / 2 - 30);
+        Canvas.SetTop(xLabel, height - padding + 8);
+        canvas.Children.Add(xLabel);
+
+        TextBlock yLabel = new() { Text = "Force, kN", FontSize = 12 };
+        Canvas.SetLeft(yLabel, 2);
+        Canvas.SetTop(yLabel, padding - 18);
+        canvas.Children.Add(yLabel);
+
+        return canvas;
+    }
+
+    private static byte[]? RenderPlotImageBytes(IReadOnlyList<(double Length, double Force)> dataPoints, int width, int height)
+    {
+        Canvas? canvas = CreatePlotCanvas(dataPoints, width, height, 60);
+        if (canvas is null)
+            return null;
+
+        canvas.Measure(new Size(width, height));
+        canvas.Arrange(new Rect(0, 0, width, height));
+        canvas.UpdateLayout();
+
+        RenderTargetBitmap renderBitmap = new(width, height, 96, 96, PixelFormats.Pbgra32);
+        renderBitmap.Render(canvas);
+
+        PngBitmapEncoder encoder = new();
+        encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+
+        using MemoryStream stream = new();
+        encoder.Save(stream);
+        return stream.ToArray();
     }
 }
