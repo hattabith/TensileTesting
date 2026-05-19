@@ -57,7 +57,7 @@ namespace TensileTestingApp.Models;
 
         private async Task FlushBufferAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested || !_buffer.IsEmpty)
             {
                 if (_writer is not null && _buffer.TryDequeue(out var data))
                 {
@@ -65,7 +65,14 @@ namespace TensileTestingApp.Models;
                     continue;
                 }
 
-                await Task.Delay(100, cancellationToken);
+                try
+                {
+                    await Task.Delay(100, cancellationToken);
+                }
+                catch (OperationCanceledException) when (_buffer.IsEmpty)
+                {
+                    break;
+                }
             }
         }
 

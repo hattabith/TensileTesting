@@ -12,11 +12,12 @@ namespace TensileTesting.Tests
         [Fact]
         public async Task StartLogginAsync_CreatesFileWithCsvHeader()
         {
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             await using var logger = new CSVLogger();
             await logger.StartLogginAsync(_tempFile);
             await logger.StopLoggingAsync();
 
-            string content = await File.ReadAllTextAsync(_tempFile);
+            string content = await File.ReadAllTextAsync(_tempFile, cancellationToken);
             Assert.Contains("Timestamp,Force,Length", content);
         }
 
@@ -36,6 +37,7 @@ namespace TensileTesting.Tests
         [Fact]
         public async Task Enqueue_SingleItem_IsWrittenToFileAfterStop()
         {
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             await using var logger = new CSVLogger();
             await logger.StartLogginAsync(_tempFile);
 
@@ -47,11 +49,9 @@ namespace TensileTesting.Tests
             };
             logger.Enqueue(data);
 
-            // Give the background flush loop time to process the item
-            await Task.Delay(300);
             await logger.StopLoggingAsync();
 
-            string content = await File.ReadAllTextAsync(_tempFile);
+            string content = await File.ReadAllTextAsync(_tempFile, cancellationToken);
             Assert.Contains("50", content);
             Assert.Contains("25", content);
         }
@@ -59,6 +59,7 @@ namespace TensileTesting.Tests
         [Fact]
         public async Task Enqueue_MultipleItems_AllWrittenAfterStop()
         {
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             await using var logger = new CSVLogger();
             await logger.StartLogginAsync(_tempFile);
 
@@ -72,10 +73,9 @@ namespace TensileTesting.Tests
                 });
             }
 
-            await Task.Delay(600);
             await logger.StopLoggingAsync();
 
-            string[] lines = await File.ReadAllLinesAsync(_tempFile);
+            string[] lines = await File.ReadAllLinesAsync(_tempFile, cancellationToken);
             // Header + 5 data lines
             Assert.True(lines.Length >= 6);
         }
@@ -105,22 +105,32 @@ namespace TensileTesting.Tests
         [Fact]
         public async Task DisposeAsync_StopsLoggingGracefully()
         {
+            CancellationToken cancellationToken = TestContext.Current.CancellationToken;
             var logger = new CSVLogger();
             await logger.StartLogginAsync(_tempFile);
             logger.Enqueue(new TensileTestData { Timestamp = DateTime.UtcNow, Force = 1.0, Length = 0.5 });
-            await Task.Delay(300);
             await logger.DisposeAsync();
 
             // File should exist and contain the header at minimum
             Assert.True(File.Exists(_tempFile));
+            string content = await File.ReadAllTextAsync(_tempFile, cancellationToken);
+            Assert.Contains("Timestamp,Force,Length", content);
         }
 
         // ── Cleanup ───────────────────────────────────────────────────────────
 
         public ValueTask DisposeAsync()
         {
-            if (File.Exists(_tempFile))
-                File.Delete(_tempFile);
+            try
+            {
+                if (File.Exists(_tempFile))
+                {
+                    File.Delete(_tempFile);
+                }
+            }
+            catch (IOException)
+            {
+            }
             return ValueTask.CompletedTask;
         }
     }
