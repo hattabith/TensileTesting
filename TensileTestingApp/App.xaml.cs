@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using TensileTestingApp.Configuration;
+using TensileTestingApp.Services.Abstractions;
+using TensileTestingApp.Services.Implementations;
 using TensileTestingApp.Views;
 
 namespace TensileTestingApp;
@@ -72,6 +74,11 @@ namespace TensileTestingApp;
         {
             var settings = LoadSettings();
             services.AddSingleton(settings);
+
+            services.AddSingleton<IZeroCorrectionService>(sp =>
+                new ZeroCorrectionService(sp.GetRequiredService<AppSettings>().ZeroCorrection));
+            services.AddSingleton<IPreloadService>(sp =>
+                new PreloadService(sp.GetRequiredService<AppSettings>().Preload));
 
             services.AddTransient<ViewModel.MainWindowViewModel>();
             services.AddTransient<MainPage>();

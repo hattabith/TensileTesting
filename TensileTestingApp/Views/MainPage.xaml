@@ -74,24 +74,81 @@
                          MinHeight="200" VerticalAlignment="Bottom" ToolTip="Transmit/Recive data from COM port"/>
             </ScrollViewer>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                <Label Content="Force: " FontSize="36" Width="140"/>
-                <TextBlock Name="ForceDSeg7" Text="0.0" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="36" FontWeight="Bold" VerticalAlignment="Center" />
-                <Label Content="kN" FontSize="36" VerticalAlignment="Center" Margin="10 0 0 0"/>
+                <Label Content="Force: " FontSize="28" Width="120"/>
+                <TextBlock Name="ForceDSeg7" Text="0.0" FontFamily="{DynamicResource Dseg7Font}" FontStyle="Normal" FontSize="28" FontWeight="Bold" VerticalAlignment="Center" />
+                <Label Content="kN" FontSize="28" VerticalAlignment="Center" Margin="5 0 0 0"/>
             </StackPanel>
             <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                <Label Content="Length: " FontSize="36" Width="140" />
-                <TextBlock Name="LengthDSeg7" Text="0.0" FontFamily="{StaticResource Dseg7Font}" FontSize="36" VerticalAlignment="Center" />
-                <Label Content="mm" FontSize="36" VerticalAlignment="Center" Margin="10 0 0 0"/>
-            </StackPanel>    
+                <Label Content="Corrected: " FontSize="20" Width="120" Foreground="#228B22"/>
+                <TextBlock Name="CorrectedForceDSeg7" Text="&#x2014;" FontFamily="{DynamicResource Dseg7Font}" FontSize="20"
+                           Foreground="#228B22" FontWeight="Bold" VerticalAlignment="Center"/>
+                <Label Content="kN" FontSize="20" VerticalAlignment="Center" Margin="5 0 0 0" Foreground="#228B22"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <Label Content="Length: " FontSize="28" Width="120" />
+                <TextBlock Name="LengthDSeg7" Text="0.0" FontFamily="{StaticResource Dseg7Font}" FontSize="28" VerticalAlignment="Center" />
+                <Label Content="mm" FontSize="28" VerticalAlignment="Center" Margin="5 0 0 0"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <Label Content="Corrected: " FontSize="20" Width="120" Foreground="#228B22"/>
+                <TextBlock Name="CorrectedLengthDSeg7" Text="&#x2014;" FontFamily="{StaticResource Dseg7Font}" FontSize="20"
+                           Foreground="#228B22" VerticalAlignment="Center"/>
+                <Label Content="mm" FontSize="20" VerticalAlignment="Center" Margin="5 0 0 0" Foreground="#228B22"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel Orientation="Vertical" Grid.Row="1"  Grid.Column="1" >
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <Label Content="File Name: " Margin="10 10 0 10"/>
                 <TextBox Name="FileNameTextBox" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter file name for start processing data and save it" IsEnabled="False"/>
                 <Button Name="RecordButton" Content="Start" Width="100" Height="22" Margin="10 10 0 10"
                         ToolTip="Start/Stop data acquisition" IsEnabled="False" Click="RecordButton_Click"/>
             </StackPanel>
+
+            <GroupBox Header="Zero &amp; Preload Calibration" Margin="10 5 10 5">
+                <StackPanel Orientation="Vertical" Margin="4 4 4 4">
+                    <StackPanel Orientation="Horizontal" Margin="0 2 0 0">
+                        <Button Name="ZeroButton" Content="Establish Zero" Width="110" Height="22"
+                                IsEnabled="False" Click="ZeroButton_Click"
+                                ToolTip="Capture current signal as baseline zero"/>
+                        <Button Name="ClearZeroButton" Content="Clear" Width="50" Height="22" Margin="5 0 0 0"
+                                IsEnabled="False" Click="ClearZeroButton_Click"
+                                ToolTip="Reset zero correction"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 4 0 0">
+                        <TextBlock Text="F offset:" Width="55" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBlock Name="ForceOffsetText" Text="&#x2014;" VerticalAlignment="Center" Width="60" FontWeight="Bold" FontSize="11"/>
+                        <TextBlock Text="kN" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBlock Name="ZeroQualityDot" Text="&#x25CF;" FontSize="14" VerticalAlignment="Center"
+                                   Margin="8 0 0 0" Foreground="Gray" ToolTip="Baseline quality"/>
+                        <TextBlock Name="ZeroTimestampText" Text="" FontSize="10" VerticalAlignment="Center"
+                                   Margin="6 0 0 0" Foreground="Gray"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 2 0 4">
+                        <TextBlock Text="L offset:" Width="55" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBlock Name="LengthOffsetText" Text="&#x2014;" VerticalAlignment="Center" Width="60" FontWeight="Bold" FontSize="11"/>
+                        <TextBlock Text="mm" VerticalAlignment="Center" FontSize="11"/>
+                    </StackPanel>
+                    <Separator Margin="0 3 0 3"/>
+                    <StackPanel Orientation="Horizontal" Margin="0 2 0 2">
+                        <TextBlock Text="Mode:" Width="45" VerticalAlignment="Center" FontSize="11"/>
+                        <ComboBox Name="PreloadModeComboBox" Width="165" Height="22"
+                                  SelectionChanged="PreloadModeComboBox_SelectionChanged"
+                                  ToolTip="Mode A: subtract preload force offset; Mode B: shift length origin at threshold">
+                            <ComboBoxItem Content="A &#x2013; Force offset subtraction" IsSelected="True"/>
+                            <ComboBoxItem Content="B &#x2013; Length origin shift"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0 3 0 2">
+                        <TextBlock Text="Threshold:" Width="60" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBox Name="PreloadThresholdTextBox" Text="0.5" Width="50" Height="22"
+                                 ToolTip="Preload threshold in kN"/>
+                        <TextBlock Text="kN" Margin="4 0 10 0" VerticalAlignment="Center" FontSize="11"/>
+                        <TextBlock Name="PreloadStatusText" Text="Waiting" Foreground="Gray"
+                                   VerticalAlignment="Center" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
         </StackPanel>
 
 

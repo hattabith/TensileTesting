@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows.Controls;
+using System.Windows.Media;
 using TensileTestingApp.Configuration;
 using TensileTestingApp.Models;
 using TensileTestingApp.Services.Abstractions;
@@ -25,6 +26,8 @@ namespace TensileTestingApp.Views;
         private readonly AppSettings _settings;
         private readonly ISignalFilter _forceFilter;
         private readonly ISignalFilter _lengthFilter;
+        private readonly IZeroCorrectionService _zeroCorrectionService;
+        private readonly IPreloadService _preloadService;
         private ConnectionState _connectionState = ConnectionState.Disconnected;
         private CancellationTokenSource? _pollCts;
         private Task? _pollTask;
@@ -37,13 +40,15 @@ namespace TensileTestingApp.Views;
         private Task? _writerTask;
         private CancellationTokenSource? _writerCts;
 
-        public MainPage(AppSettings settings)
+        public MainPage(AppSettings settings, IZeroCorrectionService zeroCorrectionService, IPreloadService preloadService)
             : this(
                 new SerialPortService(),
                 new DconProtocolService(),
                 new AdcDataParserService(settings.Parser),
                 new AppLogger(settings.Logging),
-                settings)
+                settings,
+                zeroCorrectionService,
+                preloadService)
         {
         }
 
@@ -52,7 +57,9 @@ namespace TensileTestingApp.Views;
             IDconProtocolService dconProtocolService,
             IDataParser dataParser,
             ILogger logger,
-            AppSettings settings)
+            AppSettings settings,
+            IZeroCorrectionService zeroCorrectionService,
+            IPreloadService preloadService)
         {
             _serialPortService = serialPortService;
             _dconProtocolService = dconProtocolService;
@@ -61,6 +68,8 @@ namespace TensileTestingApp.Views;
             _settings = settings;
             _forceFilter = CreateFilter(settings.Filter);
             _lengthFilter = CreateFilter(settings.LengthFilter);
+            _zeroCorrectionService = zeroCorrectionService;
+            _preloadService = preloadService;
             InitializeComponent();
             Unloaded += MainPage_Unloaded;
         }
@@ -225,6 +234,18 @@ namespace TensileTestingApp.Views;
                         parsedData.FilteredForce = _forceFilter.Filter(parsedData.Force);
                         parsedData.FilteredLength = _lengthFilter.Filter(parsedData.Length);
 
+                        // Zero correction: feed sample while capturing; apply offset when ready
+                        _zeroCorrectionService.AddSample(parsedData.FilteredForce, parsedData.FilteredLength);
+                        parsedData.CorrectedForce = _zeroCorrectionService.ApplyForce(parsedData.FilteredForce);
+                        parsedData.CorrectedLength = _zeroCorrectionService.ApplyLength(parsedData.FilteredLength);
+
+                        // Preload tracking (only during an active recording)
+                        if (_resiveState == ReceivingToFileState.Receiving)
+                            _preloadService.ProcessSample(parsedData.CorrectedForce, parsedData.CorrectedLength);
+
+                        parsedData.PreloadAdjustedForce = _preloadService.ApplyForce(parsedData.CorrectedForce);
+                        parsedData.PreloadAdjustedLength = _preloadService.ApplyLength(parsedData.CorrectedLength);
+
                         string line = string.Join(
                             _settings.Recording.Delimiter,
                             parsedData.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
@@ -238,6 +259,14 @@ namespace TensileTestingApp.Views;
                             OutputScrollViewer.ScrollToEnd();
                             ForceDSeg7.Text = parsedData.Force.ToString(_settings.Ui.ForceDisplayFormat, CultureInfo.InvariantCulture);
                             LengthDSeg7.Text = parsedData.Length.ToString(_settings.Ui.LengthDisplayFormat, CultureInfo.InvariantCulture);
+
+                            if (_zeroCorrectionService.State == ZeroCorrectionState.Ready)
+                            {
+                                CorrectedForceDSeg7.Text = parsedData.CorrectedForce.ToString(_settings.Ui.ForceDisplayFormat, CultureInfo.InvariantCulture);
+                                CorrectedLengthDSeg7.Text = parsedData.CorrectedLength.ToString(_settings.Ui.LengthDisplayFormat, CultureInfo.InvariantCulture);
+                            }
+
+                            UpdateCalibrationStatusDisplay();
                         });
 
                         if (_resiveState == ReceivingToFileState.Receiving)
@@ -285,6 +314,8 @@ namespace TensileTestingApp.Views;
                     Address485ComboBox.IsEnabled = true;
                     RecordButton.IsEnabled = false;
                     FileNameTextBox.IsEnabled = false;
+                    ZeroButton.IsEnabled = false;
+                    ClearZeroButton.IsEnabled = false;
                     break;
 
                 case ConnectionState.Connecting:
@@ -303,6 +334,8 @@ namespace TensileTestingApp.Views;
                     ConnectButton.IsEnabled = true;
                     RecordButton.IsEnabled = true;
                     FileNameTextBox.IsEnabled = true;
+                    ZeroButton.IsEnabled = _zeroCorrectionService.State != ZeroCorrectionState.Capturing;
+                    ClearZeroButton.IsEnabled = _zeroCorrectionService.State == ZeroCorrectionState.Ready;
                     break;
             }
             switch (_resiveState)
@@ -341,6 +374,9 @@ namespace TensileTestingApp.Views;
                     await Task.Run(_serialPortService.CloseConnection);
                 }
 
+                if (_settings.ZeroCorrection.ClearOnDisconnect)
+                    _zeroCorrectionService.Clear();
+
                 if (_resiveState == ReceivingToFileState.Receiving || _writerTask is not null || _writer is not null)
                 {
                     await StopRecordingAsync();
@@ -368,6 +404,9 @@ namespace TensileTestingApp.Views;
             _testData.Clear();
             _forceFilter.Reset();
             _lengthFilter.Reset();
+            _preloadService.Reset();
+            if (!_settings.ZeroCorrection.PreserveAcrossRecording)
+                _zeroCorrectionService.Clear();
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.ResetLiveData();
@@ -399,6 +438,15 @@ namespace TensileTestingApp.Views;
             await _writer.FlushAsync();
 
             // Write specimen parameters to companion JSON file
+            var calibrationSnapshot = new
+            {
+                ZeroForceOffset = _zeroCorrectionService.ForceOffset,
+                ZeroLengthOffset = _zeroCorrectionService.LengthOffset,
+                ZeroQuality = _zeroCorrectionService.Quality.ToString(),
+                ZeroEstablishedAt = _zeroCorrectionService.EstablishedAt?.ToString("O"),
+                PreloadMode = _preloadService.Mode.ToString(),
+                PreloadThreshold = _preloadService.Threshold
+            };
             var specimenParams = new SpecimenParameters(
                 Name: FileNameTextBox.Text,
                 Type: SpecimenTypeComboBox.SelectedItem?.ToString() ?? "Unknown",
@@ -407,7 +455,9 @@ namespace TensileTestingApp.Views;
                 RecordedAt: DateTime.Now
             );
             string metaPath = Path.Combine(baseDir, $"{experimentName}_meta.json");
-            await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(specimenParams, new JsonSerializerOptions { WriteIndented = true }));
+            await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(
+                new { Specimen = specimenParams, Calibration = calibrationSnapshot },
+                new JsonSerializerOptions { WriteIndented = true }));
 
             _writerCts = new CancellationTokenSource();
             _writeChannel = Channel.CreateUnbounded<TensileTestData>(new UnboundedChannelOptions
@@ -506,6 +556,92 @@ namespace TensileTestingApp.Views;
             }
         }
 
+        private void ZeroButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _zeroCorrectionService.StartCapture();
+            ZeroButton.IsEnabled = false;
+            ZeroButton.Content = "Capturing...";
+            CorrectedForceDSeg7.Text = "—";
+            CorrectedLengthDSeg7.Text = "—";
+            _logger.LogInfo("Zero capture started");
+        }
+
+        private void ClearZeroButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _zeroCorrectionService.Clear();
+            CorrectedForceDSeg7.Text = "—";
+            CorrectedLengthDSeg7.Text = "—";
+            UpdateCalibrationStatusDisplay();
+            UpdateUiState();
+            _logger.LogInfo("Zero correction cleared");
+        }
+
+        private void PreloadModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            _preloadService.Mode = PreloadModeComboBox.SelectedIndex == 0
+                ? PreloadMode.OffsetSubtraction
+                : PreloadMode.OriginShift;
+        }
+
+        private void UpdateCalibrationStatusDisplay()
+        {
+            // Must be called on the UI thread.
+            switch (_zeroCorrectionService.State)
+            {
+                case ZeroCorrectionState.Capturing:
+                    int collected = _zeroCorrectionService.SamplesCollected;
+                    int required = _zeroCorrectionService.SamplesRequired;
+                    ZeroButton.Content = $"Capturing {collected}/{required}";
+                    ZeroButton.IsEnabled = false;
+                    ClearZeroButton.IsEnabled = false;
+                    ForceOffsetText.Text = "…";
+                    LengthOffsetText.Text = "…";
+                    ZeroQualityDot.Foreground = new SolidColorBrush(Colors.DarkOrange);
+                    ZeroQualityDot.ToolTip = "Capturing baseline";
+                    ZeroTimestampText.Text = "";
+                    break;
+
+                case ZeroCorrectionState.Ready:
+                    ZeroButton.Content = "Re-zero";
+                    ZeroButton.IsEnabled = _connectionState == ConnectionState.Connected;
+                    ClearZeroButton.IsEnabled = true;
+                    ForceOffsetText.Text = _zeroCorrectionService.ForceOffset.ToString("F3", CultureInfo.InvariantCulture);
+                    LengthOffsetText.Text = _zeroCorrectionService.LengthOffset.ToString("F3", CultureInfo.InvariantCulture);
+                    ZeroQualityDot.Foreground = _zeroCorrectionService.Quality switch
+                    {
+                        ZeroQuality.Good    => new SolidColorBrush(Colors.LimeGreen),
+                        ZeroQuality.Warning => new SolidColorBrush(Colors.DarkOrange),
+                        ZeroQuality.Bad     => new SolidColorBrush(Colors.Red),
+                        _                   => new SolidColorBrush(Colors.Gray)
+                    };
+                    ZeroQualityDot.ToolTip = $"Noise RMS: {_zeroCorrectionService.ForceNoiseRms:F4} kN ({_zeroCorrectionService.Quality})";
+                    ZeroTimestampText.Text = _zeroCorrectionService.EstablishedAt?.ToString("HH:mm:ss");
+                    break;
+
+                default:
+                    ZeroButton.Content = "Establish Zero";
+                    ZeroButton.IsEnabled = _connectionState == ConnectionState.Connected;
+                    ClearZeroButton.IsEnabled = false;
+                    ForceOffsetText.Text = "—";
+                    LengthOffsetText.Text = "—";
+                    ZeroQualityDot.Foreground = new SolidColorBrush(Colors.Gray);
+                    ZeroQualityDot.ToolTip = "No baseline set";
+                    ZeroTimestampText.Text = "";
+                    break;
+            }
+
+            if (_preloadService.State == PreloadState.ThresholdReached)
+            {
+                PreloadStatusText.Text = $"Locked @ {_preloadService.CapturedForceValue:F2} kN";
+                PreloadStatusText.Foreground = new SolidColorBrush(Colors.DarkGreen);
+            }
+            else
+            {
+                PreloadStatusText.Text = "Waiting";
+                PreloadStatusText.Foreground = new SolidColorBrush(Colors.Gray);
+            }
+        }
+
         private async Task WriteBatchAsync(StreamWriter writer, List<TensileTestData> batch)
         {
             StringBuilder builder = new();
@@ -516,8 +652,12 @@ namespace TensileTestingApp.Views;
                     data.Timestamp.ToString(_settings.Ui.DateTimeFormat, CultureInfo.InvariantCulture),
                     data.Force.ToString("F3", CultureInfo.InvariantCulture),
                     data.FilteredForce.ToString("F3", CultureInfo.InvariantCulture),
+                    data.CorrectedForce.ToString("F3", CultureInfo.InvariantCulture),
+                    data.PreloadAdjustedForce.ToString("F3", CultureInfo.InvariantCulture),
                     data.Length.ToString("F3", CultureInfo.InvariantCulture),
-                    data.FilteredLength.ToString("F3", CultureInfo.InvariantCulture));
+                    data.FilteredLength.ToString("F3", CultureInfo.InvariantCulture),
+                    data.CorrectedLength.ToString("F3", CultureInfo.InvariantCulture),
+                    data.PreloadAdjustedLength.ToString("F3", CultureInfo.InvariantCulture));
                 builder.AppendLine(line);
             }
 

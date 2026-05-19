@@ -9,6 +9,8 @@ namespace TensileTestingApp.Configuration;
         public UiSettings Ui { get; set; } = new();
         public FilterSettings Filter { get; set; } = new();
         public FilterSettings LengthFilter { get; set; } = new();
+        public ZeroCorrectionSettings ZeroCorrection { get; set; } = new();
+        public PreloadSettings Preload { get; set; } = new();
     }
 
     public class SerialPortSettings
@@ -46,7 +48,7 @@ namespace TensileTestingApp.Configuration;
         public string Delimiter { get; set; } = ";";
         public bool AutoFlush { get; set; } = true;
         public int BatchSizePoints { get; set; } = 10;
-        public string Header { get; set; } = "DateTime;RawForce;FilteredForce;RawLength;FilteredLength";
+        public string Header { get; set; } = "DateTime;RawForce;FilteredForce;CorrectedForce;PreloadAdjustedForce;RawLength;FilteredLength;CorrectedLength;PreloadAdjustedLength";
         public int FlushIntervalMs { get; set; } = 100;
     }
 
@@ -71,6 +73,32 @@ namespace TensileTestingApp.Configuration;
         public string DateTimeFormat { get; set; } = "O";
         public string ForceDisplayFormat { get; set; } = "F";
         public string LengthDisplayFormat { get; set; } = "F";
+    }
+
+    public class ZeroCorrectionSettings
+    {
+        /// <summary>Number of filtered samples to collect during a zero-capture window.</summary>
+        public int CaptureSamples { get; set; } = 40;
+        /// <summary>Fraction of outlier samples trimmed from each end when computing the baseline mean (0 to 0.4).</summary>
+        public double TrimFraction { get; set; } = 0.10;
+        /// <summary>Maximum RMS noise (kN) classified as Good quality baseline.</summary>
+        public double GoodNoiseThresholdKn { get; set; } = 0.05;
+        /// <summary>Maximum RMS noise (kN) still accepted as a usable baseline (above = Bad quality).</summary>
+        public double MaxNoiseThresholdKn { get; set; } = 0.20;
+        /// <summary>Keep zero offsets across Start/Stop recording cycles within the same session.</summary>
+        public bool PreserveAcrossRecording { get; set; } = true;
+        /// <summary>Clear zero offsets when the serial port is disconnected.</summary>
+        public bool ClearOnDisconnect { get; set; } = false;
+    }
+
+    public class PreloadSettings
+    {
+        /// <summary>Preload mode: "OffsetSubtraction" or "OriginShift".</summary>
+        public string Mode { get; set; } = "OffsetSubtraction";
+        /// <summary>Force threshold (kN) above which preload is considered reached.</summary>
+        public double ThresholdKn { get; set; } = 0.5;
+        /// <summary>Hysteresis band (kN) – threshold must exceed this margin to lock.</summary>
+        public double HysteresisKn { get; set; } = 0.05;
     }
 
     public class FilterSettings
