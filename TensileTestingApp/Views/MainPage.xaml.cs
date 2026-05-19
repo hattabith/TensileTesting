@@ -40,6 +40,9 @@ namespace TensileTestingApp.Views;
         private Channel<TensileTestData>? _writeChannel;
         private Task? _writerTask;
         private CancellationTokenSource? _writerCts;
+        private const double BreakDetectionMinForceKn = 1.0;
+        private const double BreakDropRatio = 0.30;
+        private System.Windows.Threading.DispatcherTimer? _comPortRefreshTimer;
 
         public MainPage(AppSettings settings, IZeroCorrectionService zeroCorrectionService, IPreloadService preloadService)
             : this(
@@ -74,6 +77,7 @@ namespace TensileTestingApp.Views;
             InitializeComponent();
             PreloadThresholdTextBox.Text = _preloadService.Threshold.ToString("F2", CultureInfo.InvariantCulture);
             PreloadModeComboBox.SelectedIndex = _preloadService.Mode == PreloadMode.OffsetSubtraction ? 0 : 1;
+            Loaded += MainPage_Loaded;
             Unloaded += MainPage_Unloaded;
         }
 
@@ -90,8 +94,26 @@ namespace TensileTestingApp.Views;
             };
         }
 
+        private void MainPage_Loaded(object sender, System.Windows.RoutedEventArgs e)
+        {
+            _comPortRefreshTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            _comPortRefreshTimer.Tick += (s, e) =>
+            {
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.UpdatePortList();
+                }
+            };
+            _comPortRefreshTimer.Start();
+        }
+
         private async void MainPage_Unloaded(object sender, System.Windows.RoutedEventArgs e)
         {
+            _comPortRefreshTimer?.Stop();
+            _comPortRefreshTimer = null;
             await CleanupResourcesAsync();
         }
 
@@ -422,6 +444,9 @@ namespace TensileTestingApp.Views;
             UpdateUiState();
 
             _testData.Clear();
+            _breakDetected = false;
+            _maxForce = 0;
+            _breakIndex = -1;
             _forceFilter.Reset();
             _lengthFilter.Reset();
             _preloadService.Reset();
@@ -528,6 +553,11 @@ namespace TensileTestingApp.Views;
             _logger.LogInfo($"Stopped recording. Points collected: {_testData.Count}");
         }
 
+
+        private bool _breakDetected = false;
+        private double _maxForce = 0;
+        private int _breakIndex = -1;
+
         private void AppendDataPoint(TensileTestData data)
         {
             _testData.Add(data);
@@ -536,10 +566,62 @@ namespace TensileTestingApp.Views;
                 _testData.RemoveAt(0);
             }
 
+            // Detect break event (force drop >30% from max)
+            if (!_breakDetected)
+            {
+                double trackingForce = Math.Abs(data.CorrectedForce);
+                if (trackingForce > _maxForce)
+                    _maxForce = trackingForce;
+
+                bool canTrackBreak =
+                    _testData.Count >= Services.TensileCalculationService.MinimumPointCount &&
+                    _maxForce >= BreakDetectionMinForceKn;
+
+                if (canTrackBreak && trackingForce < _maxForce * (1.0 - BreakDropRatio))
+                {
+                    _breakDetected = true;
+                    _breakIndex = _testData.Count - 1;
+                    ShowResultsDialog();
+                }
+            }
+
             if (DataContext is MainWindowViewModel vm)
             {
                 vm.AddLiveDataPoint(data);
             }
+        }
+
+        private void ShowResultsDialog()
+        {
+            // Take data up to break
+            var resultsData = _testData.Take(_breakIndex + 1).ToList();
+            // Get specimen parameters from UI
+            double gaugeLength = double.TryParse(GaugeLengthTextBox.Text, out var l) ? l : 0;
+            double diameter = double.TryParse(DiameterTextBox.Text, out var d) ? d : 0;
+            double elasticModulus = 0, yieldStrength = 0, ultimateStrength = 0;
+            try
+            {
+                (elasticModulus, yieldStrength, ultimateStrength) = Services.TensileCalculationService.CalculateParameters(resultsData, gaugeLength, diameter);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Calculation error: {ex.Message}", "Calculation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            var vm = new ViewModel.ResultsDialogViewModel
+            {
+                ElasticModulus = elasticModulus,
+                YieldStrength = yieldStrength,
+                UltimateStrength = ultimateStrength
+            };
+            foreach (var dataPoint in resultsData)
+            {
+                vm.DataPoints.Add((dataPoint.PreloadAdjustedLength != 0 ? dataPoint.PreloadAdjustedLength : dataPoint.CorrectedLength, dataPoint.PreloadAdjustedForce != 0 ? dataPoint.PreloadAdjustedForce : dataPoint.CorrectedForce));
+            }
+
+            var dlg = new ResultsDialog { DataContext = vm, Owner = Window.GetWindow(this) };
+            dlg.ShowDialog();
         }
 
         private async Task EnqueueForFileWriteAsync(TensileTestData data, CancellationToken token)

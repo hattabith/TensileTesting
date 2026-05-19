@@ -80,6 +80,9 @@ namespace TensileTestingApp;
             services.AddSingleton<IPreloadService>(sp =>
                 new PreloadService(sp.GetRequiredService<AppSettings>().Preload));
 
+            services.AddSingleton<Services.PdfExportService>(sp =>
+                new Services.PdfExportService(new AppLogger(sp.GetRequiredService<AppSettings>().Logging)));
+
             services.AddTransient<ViewModel.MainWindowViewModel>();
             services.AddTransient<MainPage>();
             services.AddTransient<MainWindow>();
