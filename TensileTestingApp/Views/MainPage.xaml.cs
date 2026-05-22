@@ -523,10 +523,12 @@ namespace TensileTestingApp.Views;
                 PreloadThreshold = _preloadService.Threshold
             };
             var specimenParams = new SpecimenParameters(
-                Name: FileNameTextBox.Text,
-                Type: SpecimenTypeComboBox.SelectedItem?.ToString() ?? "Unknown",
-                DiameterMm: double.TryParse(DiameterTextBox.Text, out var d) ? d : 0,
-                GaugeLengthMm: double.TryParse(GaugeLengthTextBox.Text, out var l) ? l : 0,
+                Name: string.IsNullOrWhiteSpace(SpecimenNameTextBox.Text) ? FileNameTextBox.Text : SpecimenNameTextBox.Text,
+                Type: GetSelectedSpecimenType().ToString(),
+                GaugeLengthMm: GetGaugeLengthForMetadata(),
+                DiameterMm: TryParseDimension(CylindricalDiameterTextBox.Text, out double diameterValue) ? diameterValue : null,
+                WidthMm: TryParseDimension(DogBoneWidthTextBox.Text, out double widthValue) ? widthValue : null,
+                ThicknessMm: TryParseDimension(DogBoneThicknessTextBox.Text, out double thicknessValue) ? thicknessValue : null,
                 RecordedAt: DateTime.Now
             );
             string metaPath = Path.Combine(baseDir, $"{experimentName}_meta.json");
@@ -625,13 +627,29 @@ namespace TensileTestingApp.Views;
         {
             // Take data up to break
             var resultsData = _testData.Take(_breakIndex + 1).ToList();
-            // Get specimen parameters from UI
-            double gaugeLength = double.TryParse(GaugeLengthTextBox.Text, out var l) ? l : 0;
-            double diameter = double.TryParse(DiameterTextBox.Text, out var d) ? d : 0;
+
+            if (!TryGetSpecimenGeometry(
+                out SpecimenType specimenType,
+                out double gaugeLength,
+                out double diameter,
+                out double width,
+                out double thickness,
+                out string validationError))
+            {
+                MessageBox.Show(validationError, "Calculation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
             double elasticModulus = 0, yieldStrength = 0, ultimateStrength = 0;
             try
             {
-                (elasticModulus, yieldStrength, ultimateStrength) = Services.TensileCalculationService.CalculateParameters(resultsData, gaugeLength, diameter);
+                (elasticModulus, yieldStrength, ultimateStrength) = Services.TensileCalculationService.CalculateParameters(
+                    resultsData,
+                    gaugeLength,
+                    specimenType,
+                    diameter,
+                    width,
+                    thickness);
             }
             catch (Exception ex)
             {
@@ -643,7 +661,8 @@ namespace TensileTestingApp.Views;
             {
                 ElasticModulus = elasticModulus,
                 YieldStrength = yieldStrength,
-                UltimateStrength = ultimateStrength
+                UltimateStrength = ultimateStrength,
+                SpecimenTypeName = specimenType.ToString()
             };
             foreach (var dataPoint in resultsData)
             {
@@ -652,6 +671,87 @@ namespace TensileTestingApp.Views;
 
             var dlg = new ResultsDialog(_pdfExportService) { DataContext = vm, Owner = Window.GetWindow(this) };
             dlg.ShowDialog();
+        }
+
+        private SpecimenType GetSelectedSpecimenType()
+        {
+            if (DataContext is MainWindowViewModel vm)
+                return vm.SelectedSpecimenType;
+
+            return SpecimenTypeComboBox.SelectedItem is SpecimenType selectedType
+                ? selectedType
+                : SpecimenType.Cylindrical;
+        }
+
+        private static bool TryParseDimension(string? rawValue, out double value)
+        {
+            value = 0;
+            if (string.IsNullOrWhiteSpace(rawValue))
+                return false;
+
+            return double.TryParse(rawValue, NumberStyles.Float, CultureInfo.CurrentCulture, out value)
+                || double.TryParse(rawValue, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
+
+        private double GetGaugeLengthForMetadata()
+        {
+            SpecimenType selectedType = GetSelectedSpecimenType();
+            string gaugeText = selectedType == SpecimenType.DogBone
+                ? DogBoneGaugeLengthTextBox.Text
+                : CylindricalGaugeLengthTextBox.Text;
+
+            return TryParseDimension(gaugeText, out double gaugeLength) ? gaugeLength : 0;
+        }
+
+        private bool TryGetSpecimenGeometry(
+            out SpecimenType specimenType,
+            out double gaugeLength,
+            out double diameter,
+            out double width,
+            out double thickness,
+            out string validationError)
+        {
+            specimenType = GetSelectedSpecimenType();
+            gaugeLength = 0;
+            diameter = 0;
+            width = 0;
+            thickness = 0;
+            validationError = string.Empty;
+
+            string gaugeText = specimenType == SpecimenType.DogBone
+                ? DogBoneGaugeLengthTextBox.Text
+                : CylindricalGaugeLengthTextBox.Text;
+
+            if (!TryParseDimension(gaugeText, out gaugeLength) || gaugeLength <= 0)
+            {
+                validationError = "Gauge length must be a positive value.";
+                return false;
+            }
+
+            if (specimenType == SpecimenType.Cylindrical)
+            {
+                if (!TryParseDimension(CylindricalDiameterTextBox.Text, out diameter) || diameter <= 0)
+                {
+                    validationError = "Diameter must be a positive value for Cylindrical specimen.";
+                    return false;
+                }
+            }
+            else
+            {
+                if (!TryParseDimension(DogBoneWidthTextBox.Text, out width) || width <= 0)
+                {
+                    validationError = "Width must be a positive value for DogBone specimen.";
+                    return false;
+                }
+
+                if (!TryParseDimension(DogBoneThicknessTextBox.Text, out thickness) || thickness <= 0)
+                {
+                    validationError = "Thickness must be a positive value for DogBone specimen.";
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private async Task EnqueueForFileWriteAsync(TensileTestData data, CancellationToken token)

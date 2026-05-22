@@ -9,6 +9,7 @@ namespace TensileTestingApp.ViewModel;
     public partial class MainWindowViewModel : ViewModelBase
     {
         private Frame _mainWindowFrame;
+        private SpecimenType _selectedSpecimenType = SpecimenType.Cylindrical;
         private string _zeroOffsetText = "-";
         private string _preloadStatusText = "Waiting";
         private string _calibrationQuality = "Unknown";
@@ -25,6 +26,12 @@ namespace TensileTestingApp.ViewModel;
             set => SetProperty(ref _mainWindowFrame, value);
         }
         public Page CurrentPage { get; set; }
+
+        public SpecimenType SelectedSpecimenType
+        {
+            get => _selectedSpecimenType;
+            set => SetProperty(ref _selectedSpecimenType, value);
+        }
 
         public string ZeroOffsetText
         {

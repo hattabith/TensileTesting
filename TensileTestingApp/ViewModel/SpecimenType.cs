@@ -3,12 +3,8 @@
     {
         public enum SpecimenType
         {
+            DogBone,
             Cylindrical,
-            NarrowFlat,
-            WideFlat,
-            DumbbellShaped,
-            Compressinon,
-            Bending
         }
 
 

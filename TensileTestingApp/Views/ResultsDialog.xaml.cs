@@ -76,7 +76,7 @@ public partial class ResultsDialog : Window
                     vm.UltimateStrength,
                     dataPoints,
                     "Test Results",
-                    "Cylindrical",
+                    vm.SpecimenTypeName,
                     chartImageData);
 
                 MessageBox.Show($"PDF saved successfully to:\n{saveDialog.FileName}", "Success");
@@ -108,6 +108,88 @@ public partial class ResultsDialog : Window
             return null;
 
         Canvas canvas = new() { Width = width, Height = height, Background = Brushes.White };
+        SolidColorBrush gridBrush = new(Color.FromRgb(220, 220, 220));
+        const int tickCount = 5;
+
+        // Grid and axis ticks with numeric labels.
+        for (int i = 0; i <= tickCount; i++)
+        {
+            double t = i / (double)tickCount;
+
+            double x = padding + t * (width - 2 * padding);
+            double y = height - padding - t * (height - 2 * padding);
+
+            // Vertical grid lines
+            Line vGrid = new()
+            {
+                X1 = x,
+                Y1 = padding,
+                X2 = x,
+                Y2 = height - padding,
+                Stroke = gridBrush,
+                StrokeThickness = 0.8
+            };
+            canvas.Children.Add(vGrid);
+
+            // Horizontal grid lines
+            Line hGrid = new()
+            {
+                X1 = padding,
+                Y1 = y,
+                X2 = width - padding,
+                Y2 = y,
+                Stroke = gridBrush,
+                StrokeThickness = 0.8
+            };
+            canvas.Children.Add(hGrid);
+
+            // X-axis ticks + labels
+            Line xTick = new()
+            {
+                X1 = x,
+                Y1 = height - padding,
+                X2 = x,
+                Y2 = height - padding + 4,
+                Stroke = Brushes.Black,
+                StrokeThickness = 1
+            };
+            canvas.Children.Add(xTick);
+
+            double xValue = minX + t * (maxX - minX);
+            TextBlock xTickLabel = new()
+            {
+                Text = xValue.ToString("F2"),
+                FontSize = width >= 600 ? 11 : 9,
+                Foreground = Brushes.Black
+            };
+            Canvas.SetLeft(xTickLabel, x - (width >= 600 ? 18 : 14));
+            Canvas.SetTop(xTickLabel, height - padding + 6);
+            canvas.Children.Add(xTickLabel);
+
+            // Y-axis ticks + labels
+            Line yTick = new()
+            {
+                X1 = padding - 4,
+                Y1 = y,
+                X2 = padding,
+                Y2 = y,
+                Stroke = Brushes.Black,
+                StrokeThickness = 1
+            };
+            canvas.Children.Add(yTick);
+
+            double yValue = minY + t * (maxY - minY);
+            TextBlock yTickLabel = new()
+            {
+                Text = yValue.ToString("F2"),
+                FontSize = width >= 600 ? 11 : 9,
+                Foreground = Brushes.Black
+            };
+            Canvas.SetLeft(yTickLabel, width >= 600 ? 4 : 2);
+            Canvas.SetTop(yTickLabel, y - (width >= 600 ? 8 : 7));
+            canvas.Children.Add(yTickLabel);
+        }
+
         Polyline line = new() { Stroke = Brushes.SteelBlue, StrokeThickness = 2 };
 
         foreach ((double length, double force) in dataPoints)
@@ -126,7 +208,7 @@ public partial class ResultsDialog : Window
 
         TextBlock xLabel = new() { Text = "Length, mm", FontSize = 12 };
         Canvas.SetLeft(xLabel, width / 2 - 30);
-        Canvas.SetTop(xLabel, height - padding + 8);
+        Canvas.SetTop(xLabel, height - (width >= 600 ? 20 : 8));
         canvas.Children.Add(xLabel);
 
         TextBlock yLabel = new() { Text = "Force, kN", FontSize = 12 };

@@ -39,30 +39,75 @@
         </StackPanel>
 
         <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="0">
-            <StackPanel Orientation="Horizontal"  HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Label Content="Specimen name" Margin="10 10 0 10" ></Label>
-                <TextBox Text="" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter specimen name or experiment name"></TextBox>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <Label Content="Specimen name" Margin="10 10 0 10" />
+                <TextBox Name="SpecimenNameTextBox" Text="" Margin="0 10 0 10" Width="100" Height="22" ToolTip="Enter specimen name or experiment name"/>
                 <Label Content="Type" Margin="10 10 0 10" />
-                <ComboBox Name="SpecimenTypeComboBox" ItemsSource="{Binding Path=SpecimenTypeValues}" Margin="0 10 10 10" Height="22" Width="100" SelectedIndex="0"
-                          ToolTip="Type of spiceman. Under construction. Today only &quot;Cylindrscal&quot; working... ">
-                    <ComboBox.ItemContainerStyle>
-                        <Style TargetType="ComboBoxItem">
-                            <Setter Property="IsEnabled" Value="False" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.Cylindrical}">
-                                    <Setter Property="IsEnabled" Value="True" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </ComboBox.ItemContainerStyle>
-                </ComboBox>
+                <ComboBox Name="SpecimenTypeComboBox"
+                          ItemsSource="{Binding Path=SpecimenTypeValues}"
+                          SelectedItem="{Binding SelectedSpecimenType, Mode=TwoWay}"
+                          Margin="0 10 10 10" Height="22" Width="120"
+                          ToolTip="Select specimen type" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                <Label Content="Diameter" Margin="10 10 0 10" />
-                <TextBox Name="DiameterTextBox" Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen diameter in mm"></TextBox>
-                <Label Content="Height" Margin="10 10 0 10" />
-                <TextBox Name="GaugeLengthTextBox" Text="" Margin="0 10 0 10" Width="50" Height="22" ToolTip="Specimen height in mm"></TextBox>
+                <StackPanel Margin="10 0 0 0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSpecimenType}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.Cylindrical}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Label Content="Diameter" Margin="0 10 0 10" />
+                        <TextBox Name="CylindricalDiameterTextBox" Text="" Margin="0 10 0 10" Width="60" Height="22" ToolTip="Specimen diameter in mm"/>
+                        <Label Content="Gauge length" Margin="10 10 0 10" />
+                        <TextBox Name="CylindricalGaugeLengthTextBox" Text="" Margin="0 10 0 10" Width="60" Height="22" ToolTip="Leg length before shoulder expansion in mm"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Margin="10 0 0 0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSpecimenType}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.DogBone}">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Label Content="Width" Margin="0 10 0 10" />
+                        <TextBox Name="DogBoneWidthTextBox" Text="" Margin="0 10 0 10" Width="60" Height="22" ToolTip="DogBone leg width in mm"/>
+                        <Label Content="Thickness" Margin="10 10 0 10" />
+                        <TextBox Name="DogBoneThicknessTextBox" Text="" Margin="0 10 0 10" Width="60" Height="22" ToolTip="DogBone leg thickness in mm"/>
+                        <Label Content="Gauge length" Margin="10 10 0 10" />
+                        <TextBox Name="DogBoneGaugeLengthTextBox" Text="" Margin="0 10 0 10" Width="60" Height="22" ToolTip="Leg length before shoulder expansion in mm"/>
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 6 0 0">
+                <Image Name="SpecimenPreviewImage" Width="160" Height="80" Stretch="Uniform" ToolTip="Selected specimen preview">
+                    <Image.Style>
+                        <Style TargetType="Image">
+                            <Setter Property="Source" Value="/Assets/Cylindrical.png" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedSpecimenType}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.DogBone}">
+                                    <Setter Property="Source" Value="/Assets/DogBone.png" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding SelectedSpecimenType}" Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.Cylindrical}">
+                                    <Setter Property="Source" Value="/Assets/Cylindrical.png" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Image.Style>
+                </Image>
             </StackPanel>
         </StackPanel>
 

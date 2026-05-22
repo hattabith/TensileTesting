@@ -30,6 +30,13 @@ public class ResultsDialogViewModel : INotifyPropertyChanged
         set { if (_ultimateStrength != value) { _ultimateStrength = value; OnPropertyChanged(nameof(UltimateStrength)); } }
     }
 
+    private string _specimenTypeName = "Unknown";
+    public string SpecimenTypeName
+    {
+        get => _specimenTypeName;
+        set { if (_specimenTypeName != value) { _specimenTypeName = value; OnPropertyChanged(nameof(SpecimenTypeName)); } }
+    }
+
     protected void OnPropertyChanged(string propertyName) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 }
