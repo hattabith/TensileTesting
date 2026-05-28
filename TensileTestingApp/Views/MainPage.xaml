@@ -93,7 +93,39 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10 6 0 0">
-                <Image Name="SpecimenPreviewImage" Width="160" Height="80" Stretch="Uniform" ToolTip="Selected specimen preview">
+                <Image Name="SpecimenPreviewImage"
+                       Width="160"
+                       Height="80"
+                       Stretch="Uniform"
+                       Tag="{Binding SelectedSpecimenType}"
+                       ToolTipService.InitialShowDelay="120"
+                       ToolTipService.ShowDuration="20000">
+                    <Image.ToolTip>
+                        <ToolTip Placement="Right" HasDropShadow="True">
+                            <Border Background="White" BorderBrush="#808080" BorderThickness="1" Padding="8">
+                                <StackPanel>
+                                    <TextBlock Text="Enlarged specimen scheme" FontWeight="SemiBold" Margin="0 0 0 6" />
+                                    <Image Width="828" Height="468" Stretch="Uniform">
+                                        <Image.Style>
+                                            <Style TargetType="Image">
+                                                <Setter Property="Source" Value="/Assets/CylindricalScheme.png" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ToolTip}}"
+                                                                 Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.DogBone}">
+                                                        <Setter Property="Source" Value="/Assets/DogBoneScheme.png" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource AncestorType=ToolTip}}"
+                                                                 Value="{x:Static ViewModel:MainWindowViewModel+SpecimenType.Cylindrical}">
+                                                        <Setter Property="Source" Value="/Assets/CylindricalScheme.png" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Image.Style>
+                                    </Image>
+                                </StackPanel>
+                            </Border>
+                        </ToolTip>
+                    </Image.ToolTip>
                     <Image.Style>
                         <Style TargetType="Image">
                             <Setter Property="Source" Value="/Assets/Cylindrical.png" />

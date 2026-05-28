@@ -13,7 +13,9 @@
   <ItemGroup>
     <None Remove="Icon.png" />
     <None Remove="Assets\Cylindrical.png" />
+    <None Remove="Assets\CylindricalScheme.png" />
     <None Remove="Assets\DogBone.png" />
+    <None Remove="Assets\DogBoneScheme.png" />
     <None Remove="Styles\Fonts\dseg7\ttf\dseg7-modern-latin-700-normal.ttf" />
     <None Remove="TensileTestingIcon.png" />
   </ItemGroup>
@@ -49,7 +51,9 @@
 
   <ItemGroup>
     <Resource Include="Assets\Cylindrical.png" />
+    <Resource Include="Assets\CylindricalScheme.png" />
     <Resource Include="Assets\DogBone.png" />
+    <Resource Include="Assets\DogBoneScheme.png" />
     <Resource Include="Icon.png" />
     <Resource Include="Styles\Fonts\dseg7\ttf\dseg7-modern-latin-700-normal.ttf">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
